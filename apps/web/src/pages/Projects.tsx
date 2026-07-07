@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
-import { GitBranch, ArrowLeft } from 'lucide-react'
+import { GitBranch, ArrowLeft, HelpCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MarkdownView } from '@/components/MarkdownView'
-import { TaskTreeNode, getProjectColor } from '@/components/TaskTreeNode'
+import { TaskTreeNode, getProjectColor, TASK_STATUS_CONFIG } from '@/components/TaskTreeNode'
 import { ProjectTabs, PROJECT_STATUS_CONFIG } from '@/components/ProjectTabs'
 import { TaskNoteView } from '@/components/TaskNoteView'
 import {
@@ -15,6 +15,32 @@ import {
   type TaskNode,
   type Projects,
 } from '@/content/loader'
+
+// ── Status legend tooltip ────────────────────────────────────
+
+function StatusLegend() {
+  return (
+    <div className="group/help relative flex-shrink-0">
+      <HelpCircle className="h-3.5 w-3.5 cursor-help text-placeholder transition-colors group-hover/help:text-dim" />
+      <div className="invisible absolute right-0 top-full z-50 mt-1 w-60 rounded-lg border border-border bg-card p-3 opacity-0 shadow-xl transition-all group-hover/help:visible group-hover/help:opacity-100">
+        <h4 className="mb-2 text-xs font-semibold text-heading">任务状态说明</h4>
+        <ul className="space-y-1.5">
+          {Object.entries(TASK_STATUS_CONFIG).map(([key, cfg]) => (
+            <li key={key} className="flex items-center gap-2 text-[11px] text-body">
+              <span className={cn('h-2 w-2 flex-shrink-0 rounded-full ring-2', cfg.dot, cfg.ring)} />
+              <span className="font-medium">{cfg.label}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-2.5 border-t border-border pt-2">
+          <p className="text-[10px] leading-relaxed text-dim">
+            圆点颜色表示任务的执行状态；分支线颜色对应所属项目。
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ── Project README renderer ──────────────────────────────────
 
@@ -43,6 +69,18 @@ function ProjectReadme({
             {project.startDate.slice(0, 10)}
             {project.endDate ? ` → ${project.endDate.slice(0, 10)}` : ' → 至今'}
           </span>
+        )}
+        {project.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {project.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-dim"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         )}
       </div>
 
@@ -159,11 +197,14 @@ export function ProjectsPage() {
                 {selectedTask && <ArrowLeft className="h-3 w-3" />}
                 {activeProject.title}
               </button>
-              {activeTree && (
-                <span className="ml-auto text-[10px] text-placeholder">
-                  {countTasks(activeTree.tasks).completed}/{countTasks(activeTree.tasks).total}
-                </span>
-              )}
+              <div className="ml-auto flex items-center gap-2">
+                {activeTree && (
+                  <span className="text-[10px] text-placeholder">
+                    {countTasks(activeTree.tasks).completed}/{countTasks(activeTree.tasks).total}
+                  </span>
+                )}
+                <StatusLegend />
+              </div>
             </div>
 
             {isLoadingTree ? (

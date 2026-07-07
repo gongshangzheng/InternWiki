@@ -12,7 +12,7 @@ import { countTasks, type TaskNode } from '@/content/loader'
 
 // ── Status config ────────────────────────────────────────────
 
-const TASK_STATUS_CONFIG: Record<
+export const TASK_STATUS_CONFIG: Record<
   string,
   { label: string; dot: string; ring: string }
 > = {

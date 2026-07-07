@@ -10,14 +10,78 @@
       "endDate": "2026-06-22",
       "description": "完成数字人技术全景调研，覆盖换嘴配音、运动空间、3DGS/NeRF、扩散基模、整帧全身、实时流式 6 条路线，产出 20+ 篇系列文章",
       "children": [
-        { "id": "done-1-1", "title": "换嘴与视频配音路线（Wav2Lip/MuseTalk）", "status": "completed", "startDate": null, "endDate": null, "description": "系列（二）", "children": [] },
-        { "id": "done-1-2", "title": "运动空间路线（SadTalker/VASA-1/Ditto）", "status": "completed", "startDate": null, "endDate": null, "description": "系列（三）", "children": [] },
-        { "id": "done-1-3", "title": "3DGS / NeRF Avatar 路线（GAGAvatar/UIKA）", "status": "completed", "startDate": null, "endDate": null, "description": "系列（四）", "children": [] },
-        { "id": "done-1-4", "title": "扩散基模与整帧路线（FlashHead/LivePortrait）", "status": "completed", "startDate": null, "endDate": null, "description": "系列（五）", "children": [] },
-        { "id": "done-1-5", "title": "整帧与全身生成（OmniAvatar/LongCat）", "status": "completed", "startDate": null, "endDate": null, "description": "系列（六）", "children": [] },
-        { "id": "done-1-6", "title": "实时流式与蒸馏（LiveAvatar/Self-Forcing）", "status": "completed", "startDate": null, "endDate": null, "description": "系列（七）", "children": [] },
-        { "id": "done-1-7", "title": "评测指标 / 数据集 / 算力 Benchmark", "status": "completed", "startDate": null, "endDate": null, "description": "系列（九）· 5 大指标族 · 28 个模型规格 · 15 个数据集", "children": [] },
-        { "id": "done-1-8", "title": "工程解读（CyberVerse/FlashHead/Ultralight）", "status": "completed", "startDate": null, "endDate": null, "description": "源码解读 + 推理 Benchmark 实测", "children": [] }
+        {
+          "id": "done-1-1",
+          "title": "换嘴与视频配音路线（Wav2Lip/MuseTalk）",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "系列（二）",
+          "children": []
+        },
+        {
+          "id": "done-1-2",
+          "title": "运动空间路线（SadTalker/VASA-1/Ditto）",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "系列（三）",
+          "children": []
+        },
+        {
+          "id": "done-1-3",
+          "title": "3DGS / NeRF Avatar 路线（GAGAvatar/UIKA）",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "系列（四）",
+          "children": []
+        },
+        {
+          "id": "done-1-4",
+          "title": "扩散基模与整帧路线（FlashHead/LivePortrait）",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "系列（五）",
+          "children": []
+        },
+        {
+          "id": "done-1-5",
+          "title": "整帧与全身生成（OmniAvatar/LongCat）",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "系列（六）",
+          "children": []
+        },
+        {
+          "id": "done-1-6",
+          "title": "实时流式与蒸馏（LiveAvatar/Self-Forcing）",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "系列（七）",
+          "children": []
+        },
+        {
+          "id": "done-1-7",
+          "title": "评测指标 / 数据集 / 算力 Benchmark",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "系列（九）· 5 大指标族 · 28 个模型规格 · 15 个数据集",
+          "children": []
+        },
+        {
+          "id": "done-1-8",
+          "title": "工程解读（CyberVerse/FlashHead/Ultralight）",
+          "status": "completed",
+          "startDate": null,
+          "endDate": null,
+          "description": "源码解读 + 推理 Benchmark 实测",
+          "children": []
+        }
       ]
     },
     {
@@ -28,9 +92,33 @@
       "endDate": "2026-06-26",
       "description": "从零实现数字人模型验证框架：核心类型/接口、15 项指标、4 个数据集适配器、FlashHead 适配器、Pipeline 编排、CLI、HTML 报告，177 项单元测试通过",
       "children": [
-        { "id": "done-2-1", "title": "设计文档 v1.0 + 11 步实现", "status": "completed", "startDate": "2026-06-22", "endDate": "2026-06-22", "description": "脚手架→接口→标准化器→指标→Logic→Pipeline→数据集→模型→CLI→报告→测试", "children": [] },
-        { "id": "done-2-2", "title": "FlashHead 适配器接入", "status": "completed", "startDate": "2026-06-24", "endDate": "2026-06-25", "description": "FlashHead 模型适配器 + TalkVid 数据格式适配 + 推理输出重构 + GT 标准化", "children": [] },
-        { "id": "done-2-3", "title": "指标实现补全 + 报告增强", "status": "completed", "startDate": "2026-06-25", "endDate": "2026-06-26", "description": "PSNR/SSIM/LPIPS/TOPIQ-FR/CSIM/SyncNet/Dino-S + 效率指标全量实现", "children": [] }
+        {
+          "id": "done-2-1",
+          "title": "设计文档 v1.0 + 11 步实现",
+          "status": "completed",
+          "startDate": "2026-06-22",
+          "endDate": "2026-06-22",
+          "description": "脚手架→接口→标准化器→指标→Logic→Pipeline→数据集→模型→CLI→报告→测试",
+          "children": []
+        },
+        {
+          "id": "done-2-2",
+          "title": "FlashHead 适配器接入",
+          "status": "completed",
+          "startDate": "2026-06-24",
+          "endDate": "2026-06-25",
+          "description": "FlashHead 模型适配器 + TalkVid 数据格式适配 + 推理输出重构 + GT 标准化",
+          "children": []
+        },
+        {
+          "id": "done-2-3",
+          "title": "指标实现补全 + 报告增强",
+          "status": "completed",
+          "startDate": "2026-06-25",
+          "endDate": "2026-06-26",
+          "description": "PSNR/SSIM/LPIPS/TOPIQ-FR/CSIM/SyncNet/Dino-S + 效率指标全量实现",
+          "children": []
+        }
       ]
     },
     {
@@ -41,9 +129,33 @@
       "endDate": null,
       "description": "相关算法、主观测试和客观指标测试",
       "children": [
-        { "id": "t1-1", "title": "算法调研与实现", "status": "active", "startDate": null, "endDate": null, "description": "调研并实现卡通数字人相关算法", "children": [] },
-        { "id": "t1-2", "title": "主观测试", "status": "planned", "startDate": null, "endDate": null, "description": "人眼感知质量评估", "children": [] },
-        { "id": "t1-3", "title": "客观指标测试", "status": "planned", "startDate": null, "endDate": null, "description": "PSNR、SSIM、LPIPS 等指标", "children": [] }
+        {
+          "id": "t1-1",
+          "title": "算法调研与实现",
+          "status": "active",
+          "startDate": null,
+          "endDate": null,
+          "description": "调研并实现卡通数字人相关算法",
+          "children": []
+        },
+        {
+          "id": "t1-2",
+          "title": "主观测试",
+          "status": "planned",
+          "startDate": null,
+          "endDate": null,
+          "description": "人眼感知质量评估",
+          "children": []
+        },
+        {
+          "id": "t1-3",
+          "title": "客观指标测试",
+          "status": "planned",
+          "startDate": null,
+          "endDate": null,
+          "description": "PSNR、SSIM、LPIPS 等指标",
+          "children": []
+        }
       ]
     },
     {
@@ -54,8 +166,24 @@
       "endDate": null,
       "description": "数字人后端 Agent 的设计理念调研",
       "children": [
-        { "id": "t2-1", "title": "Agent 设计理念调研", "status": "active", "startDate": null, "endDate": null, "description": "调研数字人后端 Agent 的设计理念", "children": [] },
-        { "id": "t2-2", "title": "产品形态与技术方案梳理", "status": "active", "startDate": null, "endDate": null, "description": "梳理主流数字人产品形态与技术方案", "children": [] }
+        {
+          "id": "t2-1",
+          "title": "Agent 设计理念调研",
+          "status": "active",
+          "startDate": null,
+          "endDate": null,
+          "description": "调研数字人后端 Agent 的设计理念",
+          "children": []
+        },
+        {
+          "id": "t2-2",
+          "title": "产品形态与技术方案梳理",
+          "status": "active",
+          "startDate": null,
+          "endDate": null,
+          "description": "梳理主流数字人产品形态与技术方案",
+          "children": []
+        }
       ]
     },
     {
@@ -66,12 +194,68 @@
       "endDate": null,
       "description": "评测框架的多项优化：人脸 matting、唇同步指标验证、无参评测模型补充",
       "children": [
-        { "id": "t3-1", "title": "人脸 matting 前置处理", "status": "active", "startDate": null, "endDate": null, "description": "PSNR 等指标需先做人脸 matting 再测，否则对 3DGS 等无背景算法不公平", "children": [] },
-        { "id": "t3-2", "title": "Wave2Lip 唇同步异常排查", "status": "active", "startDate": null, "endDate": null, "description": "之前测试 Wave2Lip 唇同步分数最高，结果可疑，需复验", "children": [] },
-        { "id": "t3-3", "title": "无参视频质量评测模型调研", "status": "active", "startDate": null, "endDate": null, "description": "除 TOPIQ 外调研更多 no-reference 视频质量评测模型，补充有参方案对照", "children": [] },
-        { "id": "t3-4", "title": "输出一版完整评测结果", "status": "planned", "startDate": null, "endDate": null, "description": "优化完成后对所有模型进行一次完整评测", "children": [] },
-        { "id": "t3-5", "title": "合并代码", "status": "completed", "startDate": "2026-07-07", "endDate": null, "startTime": "09:00", "endTime": "10:30", "location": "工位", "category": "work", "description": "合并各分支代码到主分支", "children": [] },
-        { "id": "t3-6", "title": "跑通评测代码全流程", "status": "active", "startDate": "2026-07-07", "endDate": null, "startTime": "14:00", "endTime": "17:30", "location": "工位", "category": "work", "description": "端到端跑通评测代码的完整流程，验证各环节可用", "children": [] }
+        {
+          "id": "t3-1",
+          "title": "人脸 matting 前置处理",
+          "status": "active",
+          "startDate": null,
+          "endDate": null,
+          "description": "PSNR 等指标需先做人脸 matting 再测，否则对 3DGS 等无背景算法不公平",
+          "children": []
+        },
+        {
+          "id": "t3-2",
+          "title": "Wave2Lip 唇同步异常排查",
+          "status": "active",
+          "startDate": null,
+          "endDate": null,
+          "description": "之前测试 Wave2Lip 唇同步分数最高，结果可疑，需复验",
+          "children": []
+        },
+        {
+          "id": "t3-3",
+          "title": "无参视频质量评测模型调研",
+          "status": "active",
+          "startDate": null,
+          "endDate": null,
+          "description": "除 TOPIQ 外调研更多 no-reference 视频质量评测模型，补充有参方案对照",
+          "children": []
+        },
+        {
+          "id": "t3-4",
+          "title": "输出一版完整评测结果",
+          "status": "planned",
+          "startDate": null,
+          "endDate": null,
+          "description": "优化完成后对所有模型进行一次完整评测",
+          "children": []
+        },
+        {
+          "id": "t3-5",
+          "title": "合并代码",
+          "status": "completed",
+          "startDate": "2026-07-07",
+          "endDate": null,
+          "startTime": "09:00",
+          "endTime": "10:30",
+          "location": "工位",
+          "category": "work",
+          "description": "合并各分支代码到主分支",
+          "children": []
+        },
+        {
+          "id": "t3-6",
+          "title": "跑通评测代码全流程",
+          "status": "active",
+          "startDate": "2026-07-07",
+          "endDate": null,
+          "startTime": "14:00",
+          "endTime": "17:30",
+          "location": "工位",
+          "category": "work",
+          "description": "端到端跑通评测代码的完整流程，验证各环节可用",
+          "children": []
+        }
       ]
     },
     {
@@ -82,10 +266,50 @@
       "endDate": null,
       "description": "近实时和非实时数字人模型的部署和效果测试",
       "children": [
-        { "id": "t4-1", "title": "近实时模型部署", "status": "planned", "startDate": null, "endDate": null, "description": "近实时数字人模型部署与效果测试", "children": [] },
-        { "id": "t4-2", "title": "非实时模型部署", "status": "planned", "startDate": null, "endDate": null, "description": "非实时数字人模型部署与效果测试", "children": [] },
-        { "id": "t4-3", "title": "搜集近实时数字人项目（调研）", "status": "active", "startDate": "2026-07-07", "endDate": null, "startTime": "10:30", "endTime": "12:00", "location": "工位", "category": "work", "description": "调研近实时数字人开源项目，整理候选列表", "children": [] },
-        { "id": "t4-4", "title": "封装到评测框架", "status": "planned", "startDate": "2026-07-08", "endDate": null, "startTime": "14:00", "endTime": "17:00", "location": "工位", "category": "work", "description": "对候选项目进行适配封装，补充到现有评测框架中", "children": [] }
+        {
+          "id": "t4-1",
+          "title": "近实时模型部署",
+          "status": "planned",
+          "startDate": null,
+          "endDate": null,
+          "description": "近实时数字人模型部署与效果测试",
+          "children": []
+        },
+        {
+          "id": "t4-2",
+          "title": "非实时模型部署",
+          "status": "planned",
+          "startDate": null,
+          "endDate": null,
+          "description": "非实时数字人模型部署与效果测试",
+          "children": []
+        },
+        {
+          "id": "t4-3",
+          "title": "搜集近实时数字人项目（调研）",
+          "status": "active",
+          "startDate": "2026-07-07",
+          "endDate": null,
+          "startTime": "10:30",
+          "endTime": "12:00",
+          "location": "工位",
+          "category": "work",
+          "description": "调研近实时数字人开源项目，整理候选列表",
+          "children": []
+        },
+        {
+          "id": "t4-4",
+          "title": "封装到评测框架",
+          "status": "planned",
+          "startDate": "2026-07-08",
+          "endDate": null,
+          "startTime": "14:00",
+          "endTime": "17:00",
+          "location": "工位",
+          "category": "work",
+          "description": "对候选项目进行适配封装，补充到现有评测框架中",
+          "children": []
+        }
       ]
     },
     {
@@ -96,8 +320,65 @@
       "endDate": null,
       "description": "设计对话场景、评测维度，完成数据集采集与标注",
       "children": [
-        { "id": "t5-1", "title": "设计对话场景与评测维度", "status": "planned", "startDate": null, "endDate": null, "description": "", "children": [] },
-        { "id": "t5-2", "title": "数据集采集与标注", "status": "planned", "startDate": null, "endDate": null, "description": "", "children": [] }
+        {
+          "id": "t5-1",
+          "title": "设计对话场景与评测维度",
+          "status": "planned",
+          "startDate": null,
+          "endDate": null,
+          "description": "",
+          "children": []
+        },
+        {
+          "id": "t5-2",
+          "title": "数据集采集与标注",
+          "status": "planned",
+          "startDate": null,
+          "endDate": null,
+          "description": "",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "liveportrait-liveact-ditto",
+      "title": "补充论文精读（LivePortrait/LiveAct/Ditto）",
+      "status": "completed",
+      "assignee": "tangwen",
+      "startDate": null,
+      "endDate": null,
+      "description": "",
+      "children": [
+        {
+          "id": "liveportrait",
+          "title": "LivePortrait 精读（系列十三）",
+          "status": "completed",
+          "assignee": "tangwen",
+          "startDate": null,
+          "endDate": null,
+          "description": "隐式关键点路线的工程化肖像动画框架，arXiv:2407.03168，快手科技",
+          "children": []
+        },
+        {
+          "id": "soulx-liveact",
+          "title": "SoulX-LiveAct 精读（系列三十八）",
+          "status": "completed",
+          "assignee": "tangwen",
+          "startDate": null,
+          "endDate": null,
+          "description": "Neighbor Forcing + ConvKV Memory 实现小时级实时数字人动画，arXiv:2603.11746，Soul AI Lab",
+          "children": []
+        },
+        {
+          "id": "ditto",
+          "title": "Ditto 精读（系列六）",
+          "status": "completed",
+          "assignee": "tangwen",
+          "startDate": null,
+          "endDate": null,
+          "description": "把扩散模型搬进运动空间的实时可控数字人，arXiv:2404.18503",
+          "children": []
+        }
       ]
     }
   ]

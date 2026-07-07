@@ -1,13 +1,30 @@
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Check, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { internalLinkHref } from '@/lib/markdown'
+
+// Track .dark class on <html> so code blocks can switch theme reactively
+function useDarkMode() {
+  const [isDark, setIsDark] = useState(() =>
+    typeof document !== 'undefined'
+      ? document.documentElement.classList.contains('dark')
+      : true,
+  )
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+  return isDark
+}
 
 type CodeProps = {
   className?: string
@@ -20,6 +37,7 @@ type PreProps = {
 
 function CodeBlock({ className, children }: CodeProps) {
   const [copied, setCopied] = useState(false)
+  const isDark = useDarkMode()
   const raw = String(children ?? '').replace(/\n$/, '')
   const langMatch = /language-([\w-]+)/.exec(className ?? '')
   const language = langMatch?.[1] ?? 'text'
@@ -50,7 +68,7 @@ function CodeBlock({ className, children }: CodeProps) {
       </div>
       <SyntaxHighlighter
         language={language}
-        style={oneDark}
+        style={isDark ? oneDark : oneLight}
         customStyle={{
           margin: 0,
           padding: '0.9rem 1rem',

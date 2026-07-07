@@ -49,7 +49,7 @@ git push -u origin intern-zhangsan
 ### 第二步：创建实习生档案
 
 \`\`\`bash
-pnpm cli new-intern --name 张三 --slug zhangsan --team 后端组 --role 后端开发实习生
+pnpm report new-intern --name 张三 --slug zhangsan --team 后端组 --role 后端开发实习生
 \`\`\`
 
 这会自动创建目录结构和 \`profile.md\` 模板。填写你的自我介绍和技术栈。
@@ -57,7 +57,7 @@ pnpm cli new-intern --name 张三 --slug zhangsan --team 后端组 --role 后端
 ### 第三步：开始写日报
 
 \`\`\`bash
-pnpm cli new-report --intern zhangsan --type daily
+pnpm report new-daily --intern zhangsan
 \`\`\`
 
 生成的模板已经包含「今日完成 / 进行中 / 阻塞项 / 笔记 / 习惯打卡」结构，填写后提交。
@@ -134,7 +134,7 @@ pnpm dev             # 启动开发服务器 (localhost:5180/InternWiki/)
 ### 创建项目
 
 \`\`\`bash
-pnpm cli new-project --intern zhangsan --slug my-project --title "我的项目" --summary "一句话描述"
+pnpm project new --intern zhangsan --slug my-project --title "我的项目" --summary "一句话描述"
 \`\`\`
 
 这会创建：
@@ -146,19 +146,19 @@ pnpm cli new-project --intern zhangsan --slug my-project --title "我的项目" 
 
 \`\`\`bash
 # 添加任务
-pnpm cli task add --intern zhangsan --project my-project --title "设计数据库 Schema"
+pnpm task add --intern zhangsan --project my-project --title "设计数据库 Schema"
 
 # 添加子任务
-pnpm cli task add --intern zhangsan --project my-project --title "用户表设计" --parent t1
+pnpm task add --intern zhangsan --project my-project --title "用户表设计" --parent t1
 
 # 标记完成
-pnpm cli task done --intern zhangsan --project my-project --id t1-1
+pnpm task done --intern zhangsan --project my-project --id t1-1
 
 # 查看任务树
-pnpm cli task list --intern zhangsan --project my-project
+pnpm task list --intern zhangsan --project my-project
 
 # 查看统计
-pnpm cli task stats --intern zhangsan
+pnpm task stats --intern zhangsan
 \`\`\`
 
 ### 任务状态
@@ -207,7 +207,9 @@ pnpm dev              # 启动开发服务器 (端口 5180)
 pnpm build            # 构建生产版本
 pnpm content:build    # 仅编译 Velite 内容
 pnpm typecheck        # 类型检查
-pnpm cli help         # 查看 CLI 帮助
+pnpm report help      # 查看 report CLI 帮助
+pnpm task help        # 查看 task CLI 帮助
+pnpm project help     # 查看 project CLI 帮助
 \`\`\`
 
 ---

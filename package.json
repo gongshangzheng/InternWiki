@@ -16,7 +16,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,md,json,css}\"",
     "typecheck": "pnpm -r --parallel run typecheck",
     "content:build": "pnpm --filter @internwiki/web content:build",
-    "cli": "node scripts/cli.mjs"
+    "report": "node scripts/report.mjs",
+    "task": "node scripts/task.mjs",
+    "project": "node scripts/project.mjs"
   },
   "devDependencies": {
     "prettier": "^3.6.2"

@@ -70,7 +70,9 @@ pnpm build        # 构建 (velite build + tsc + vite build)
 pnpm preview      # 预览构建结果
 pnpm content:build  # 仅编译 Velite 内容
 pnpm typecheck    # 类型检查
-pnpm cli          # CLI 工具入口
+pnpm report       # 报告与档案 CLI (new-intern/new-daily/new-weekly/new-monthly/new-doc)
+pnpm task         # 任务树 CLI (add/done/list/stats/remove/move)
+pnpm project      # 项目创建 CLI (new)
 ```
 
 - 开发服务器固定端口 **5180**，base 路径 `/InternWiki/`

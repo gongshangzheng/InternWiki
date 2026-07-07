@@ -28,7 +28,10 @@ InternWiki/
 │   ├── public/interns/{slug}/    # 静态资源 (图片等)
 │   ├── src/
 │   └── velite.config.ts
-├── scripts/cli.mjs               # CLI 工具
+├── scripts/                     # CLI 工具 (按领域拆分)
+│   ├── report.mjs               #   报告与档案
+│   ├── task.mjs                 #   任务树
+│   └── project.mjs              #   项目创建
 └── .github/workflows/deploy.yml  # GitHub Actions
 ```
 
@@ -38,33 +41,35 @@ InternWiki/
 
 | 任务 | Skill | 关键命令 |
 |------|-------|----------|
-| 创建实习生档案 | `internwiki-reports` | `pnpm cli new-intern --name 张三 --slug zhangsan` |
-| 写日报/周报/月报 | `internwiki-reports` | `pnpm cli new-report --intern alice --type daily` |
-| 写技术文档 | `internwiki-reports` | `pnpm cli new-doc --intern alice --title "Redis 指南"` |
+| 创建实习生档案 | `internwiki-reports` | `pnpm report new-intern --name 张三 --slug zhangsan` |
+| 写日报/周报/月报 | `internwiki-reports` | `pnpm report new-daily --intern alice` |
+| 写技术文档 | `internwiki-reports` | `pnpm report new-doc --intern alice --title "Redis 指南"` |
 | 在报告中链接项目/任务 | `internwiki-reports` | `[[project:slug]]` / `[[task:slug/id]]` |
-| 创建项目 | `internwiki-projects` | `pnpm cli new-project --intern alice --slug xxx` |
-| 管理任务树 | `internwiki-projects` | `pnpm cli task add/list/done/move/remove` |
+| 创建项目 | `internwiki-projects` | `pnpm project new --intern alice --slug xxx` |
+| 管理任务树 | `internwiki-projects` | `pnpm task add/list/done/move/remove` |
 | 放置图片/截图 | `internwiki-devops` | 放 `public/interns/{slug}/` 下 |
 | Git 分支操作 | `internwiki-devops` | `git checkout -b intern-xxx` |
 
 ## CLI 速查
 
 ```bash
-# ── 内容管理 ──
-pnpm cli new-intern --name 张三 --slug zhangsan --team 后端组
-pnpm cli new-report --intern alice --type daily [--date 2026-07-07]
-pnpm cli new-report --intern alice --type weekly [--week 2026-W28]
-pnpm cli new-report --intern alice --type monthly [--month 2026-07]
-pnpm cli new-doc --intern alice --title "JWT 认证" [--slug jwt-auth]
-pnpm cli new-project --intern alice --slug search-engine --title "搜索引擎"
+# ── 报告与档案 (pnpm report) ──
+pnpm report new-intern   --name 张三 --slug zhangsan --team 后端组
+pnpm report new-daily    --intern alice [--date 2026-07-07]
+pnpm report new-weekly   --intern alice [--week 2026-W28]
+pnpm report new-monthly  --intern alice [--month 2026-07]
+pnpm report new-doc      --intern alice --title "JWT 认证" [--slug jwt-auth]
 
-# ── 任务管理 ──
-pnpm cli task add    --intern alice --project xxx --title "任务名" [--parent t1] [--status planned]
-pnpm cli task done   --intern alice --project xxx --id t1-2
-pnpm cli task list   --intern alice --project xxx
-pnpm cli task stats  --intern alice
-pnpm cli task remove --intern alice --project xxx --id t1-3
-pnpm cli task move   --intern alice --project xxx --id t1-2 --parent t3
+# ── 项目创建 (pnpm project) ──
+pnpm project new --intern alice --slug search-engine --title "搜索引擎"
+
+# ── 任务管理 (pnpm task) ──
+pnpm task add    --intern alice --project xxx --title "任务名" [--parent t1] [--status planned]
+pnpm task done   --intern alice --project xxx --id t1-2
+pnpm task list   --intern alice --project xxx
+pnpm task stats  --intern alice
+pnpm task remove --intern alice --project xxx --id t1-3
+pnpm task move   --intern alice --project xxx --id t1-2 --parent t3
 
 # ── 开发 ──
 pnpm dev            # 开发服务器 (port 5180, base /InternWiki/)

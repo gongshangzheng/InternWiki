@@ -345,7 +345,7 @@ export function CalendarPage() {
           ) : (
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-              initialView="dayGridMonth"
+              initialView="timeGridThreeDay"
               views={{
                 timeGridThreeDay: {
                   type: 'timeGrid',

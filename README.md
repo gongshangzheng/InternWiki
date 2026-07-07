@@ -43,16 +43,16 @@ pnpm dev
 pnpm build
 
 # 新增实习生
-pnpm cli new-intern --name 张三 --slug alice --team 后端组 --start-date 2026-06-01
+pnpm report new-intern --name 张三 --slug alice --team 后端组 --start-date 2026-06-01
 
 # 新增日报
-pnpm cli new-report --intern alice --type daily
+pnpm report new-daily --intern alice
 
 # 新增月报
-pnpm cli new-report --intern alice --type monthly --month 2026-07
+pnpm report new-monthly --intern alice --month 2026-07
 ```
 
-打开 http://localhost:5173/InternWiki/ 查看站点。
+打开 http://localhost:5180/InternWiki/ 查看站点。
 
 ## 项目结构
 
@@ -321,17 +321,18 @@ graph LR
 
 | 命令 | 说明 |
 |------|------|
-| `pnpm dev` | 启动开发服务器（默认 :5173，HMR） |
+| `pnpm dev` | 启动开发服务器（端口 5180，HMR） |
 | `pnpm build` | 构建静态站点（velite build + vite build） |
-| `pnpm cli new-intern` | 创建新实习生空间 |
-| `pnpm cli new-report --type daily` | 创建日报 |
-| `pnpm cli new-report --type weekly` | 创建周报 |
-| `pnpm cli new-report --type monthly` | 创建月报 |
-| `pnpm cli new-doc` | 创建知识库文档 |
-| `pnpm cli task add` | 添加项目任务 |
-| `pnpm cli task done` | 标记任务完成 |
-| `pnpm cli task list` | 列出项目任务树 |
-| `pnpm cli task stats` | 聚合实习生任务统计 |
+| `pnpm report new-intern` | 创建新实习生空间 |
+| `pnpm report new-daily` | 创建日报 |
+| `pnpm report new-weekly` | 创建周报 |
+| `pnpm report new-monthly` | 创建月报 |
+| `pnpm report new-doc` | 创建知识库文档 |
+| `pnpm project new` | 创建新项目 |
+| `pnpm task add` | 添加项目任务 |
+| `pnpm task done` | 标记任务完成 |
+| `pnpm task list` | 列出项目任务树 |
+| `pnpm task stats` | 聚合实习生任务统计 |
 
 ## 部署
 

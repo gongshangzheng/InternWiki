@@ -487,14 +487,14 @@ export async function getProjectTasks(internSlug: string, projectSlug: string): 
 
 **多项目聚合**：实习生仪表盘聚合该实习生所有项目的任务树统计
 
-### 3.4 CLI 任务管理 (`scripts/cli.mjs`)
+### 3.4 任务管理 CLI (`scripts/task.mjs`)
 
 ```bash
 # 任务增删改查（直接读写 tasks.json）
-pnpm cli task add    --intern alice --project search-engine --title "添加测试" --parent t2
-pnpm cli task done   --intern alice --project search-engine --id t2-2
-pnpm cli task list   --intern alice --project search-engine
-pnpm cli task stats  --intern alice          # 聚合所有项目统计
+pnpm task add    --intern alice --project search-engine --title "添加测试" --parent t2
+pnpm task done   --intern alice --project search-engine --id t2-2
+pnpm task list   --intern alice --project search-engine
+pnpm task stats  --intern alice          # 聚合所有项目统计
 ```
 
 ---
@@ -634,23 +634,24 @@ velite build && tsc -b && vite build
 
 ---
 
-## 第六阶段：CLI 工具 (`scripts/cli.mjs`)
+## 第六阶段：CLI 工具 (按领域拆分)
 
 ```bash
 # 构建/开发
-pnpm dev                          # Vite 开发服务器（默认 :5173，HMR）
+pnpm dev                          # Vite 开发服务器（默认 :5180，HMR）
 pnpm build                        # velite build + vite build
 
-# 实习生管理
-pnpm cli new-intern --name 张三 --slug alice --team 后端组 --start-date 2026-06-01
+# 实习生与报告管理 (scripts/report.mjs)
+pnpm report new-intern   --name 张三 --slug alice --team 后端组 --start-date 2026-06-01
+pnpm report new-daily    --intern alice [--date 2026-07-07]
+pnpm report new-weekly   --intern alice [--week 2026-W28]
+pnpm report new-monthly  --intern alice [--month 2026-07]
+pnpm report new-doc      --intern alice --title "Redis 缓存指南"
 
-# 报告管理
-pnpm cli new-report --intern alice --type daily  [--date 2026-07-07]
-pnpm cli new-report --intern alice --type weekly [--week 2026-W28]
-pnpm cli new-report --intern alice --type monthly [--month 2026-07]
-pnpm cli new-doc    --intern alice --title "Redis 缓存指南"
+# 项目创建 (scripts/project.mjs)
+pnpm project new --intern alice --slug search-engine --title "搜索引擎"
 
-# 任务管理（见 3.4）
+# 任务管理 (scripts/task.mjs，见 3.4)
 ```
 
 CLI 生成带 frontmatter 的 Markdown 模板与目录结构。

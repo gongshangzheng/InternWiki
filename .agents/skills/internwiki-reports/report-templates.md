@@ -14,33 +14,12 @@
 ## 1. 创建新实习生
 
 ```bash
-pnpm cli new-intern --name 张三 --slug zhangsan --team 后端组 --role 后端开发实习生
+pnpm report new-intern --name 张三 --slug zhangsan --team 后端组 --role 后端开发实习生
 ```
 
 参数：`--name`(必填) `--slug`(必填) `--team` `--role` `--start-date`
 
-也可手动创建 `content/interns/{slug}/profile.md`：
-
-```markdown
----
-name: 张三
-slug: zhangsan
-team: 后端组
-role: 后端开发实习生
-startDate: 2026-07-01
----
-
-## 自我介绍
-
-简短的自我介绍。
-
-## 技术栈
-
-- **语言**: Python, Go
-- **框架**: Gin, FastAPI
-```
-
-**规则**：`slug` 必须为英文且与目录名一致；`name` 为中文姓名；创建后运行 `pnpm content:build`。
+创建后运行 `pnpm content:build`。
 
 ---
 
@@ -49,8 +28,8 @@ startDate: 2026-07-01
 文件路径：`content/interns/{intern}/daily/YYYY-MM-DD.md`
 
 ```bash
-pnpm cli new-report --intern alice --type daily
-pnpm cli new-report --intern alice --type daily --date 2026-07-07
+pnpm report new-daily --intern alice
+pnpm report new-daily --intern alice --date 2026-07-07
 ```
 
 ```markdown
@@ -93,8 +72,8 @@ tags: [后端, API]
 文件路径：`content/interns/{intern}/weekly/YYYY-Wxx.md`（ISO 周编号）
 
 ```bash
-pnpm cli new-report --intern alice --type weekly
-pnpm cli new-report --intern alice --type weekly --week 2026-W28
+pnpm report new-weekly --intern alice
+pnpm report new-weekly --intern alice --week 2026-W28
 ```
 
 ```markdown
@@ -138,8 +117,8 @@ tags: [周报]
 文件路径：`content/interns/{intern}/monthly/YYYY-MM.md`
 
 ```bash
-pnpm cli new-report --intern alice --type monthly
-pnpm cli new-report --intern alice --type monthly --month 2026-07
+pnpm report new-monthly --intern alice
+pnpm report new-monthly --intern alice --month 2026-07
 ```
 
 ```markdown
@@ -181,8 +160,8 @@ tags: [月报]
 文件路径：`content/interns/{intern}/docs/{slug}.md`
 
 ```bash
-pnpm cli new-doc --intern alice --title "Redis 缓存指南"
-pnpm cli new-doc --intern alice --title "JWT 认证" --slug jwt-auth
+pnpm report new-doc --intern alice --title "Redis 缓存指南"
+pnpm report new-doc --intern alice --title "JWT 认证" --slug jwt-auth
 ```
 
 ```markdown

@@ -8,8 +8,8 @@ import {
   getAllDocs,
   getAllProjects,
   getAllInterns,
-  stripMarkdown,
 } from '@/content/loader'
+import { stripMarkdown } from '@/lib/markdown'
 
 interface SearchResult {
   type: 'daily' | 'weekly' | 'monthly' | 'docs' | 'project' | 'intern'

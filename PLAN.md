@@ -2,199 +2,242 @@
 
 ## Context
 
-团队需要一个多人实习文档平台，每个实习生有独立的项目空间，可以保存日报、周报、文档和项目任务。参考了 `gongshangzheng.github.io`（自定义 Node.js 静态站点生成器，支持 PDF 展示、短代码、增量构建）和 `lifeOS`（项目管理功能：日报/周报层级体系、任务树、习惯追踪、日历集成），从头构建一个融合两者优势的平台。
+团队需要一个多人实习文档平台，每个实习生拥有独立空间，可保存**日报 / 周报 / 月报 / 文档**（Markdown 书写）和**个人任务管理体系**（JSON 存放数据）。
 
-**核心原则**：纯 Markdown 文件 + 自定义 Node.js SSG → 编译为 HTML 静态页面，不使用 React/Vue 等前端框架。
+参考 `~/lifeOS`：它是一个基于 **Vite 6 + React 19 + TypeScript + Tailwind v4 + Velite** 的个人生活操作系统，把日/周/月/季/年报与项目任务树整合成一个公开站点。InternWiki 复用 lifeOS 的技术栈与数据流模式，但把单人结构扩展为**多实习生命名空间**，并按实习场景裁剪（去掉愿景/季报/年报，聚焦日报/周报/月报/文档/任务）。
+
+**核心原则**：Markdown 内容源 + Velite 编译为类型化 JSON + React 客户端渲染，静态部署到 GitHub Pages。
 
 ---
 
-## 第一阶段：项目骨架 + 核心 SSG
+## 第一阶段：项目骨架 + 技术栈
 
-### 1.1 目录结构
+### 1.1 技术选型（对齐 lifeOS）
+
+| 层 | 选型 | 说明 |
+|----|------|------|
+| 构建 | **Vite 6** | 开发服务器 + 静态打包 |
+| UI 框架 | **React 19** + **TypeScript 5** | 客户端渲染 |
+| 样式 | **Tailwind CSS v4** + shadcn/ui | `class-variance-authority` + `clsx` + `tailwind-merge` + `lucide-react` 图标 |
+| 内容层 | **Velite** | Markdown → Zod 类型化 JSON（`.velite/`） |
+| 路由 | **React Router v7** | 实习生维度路由 |
+| 状态 | **Zustand** | 轻量全局状态（视图偏好、任务展开态） |
+| 图表 | **recharts** | 习惯趋势、任务统计 |
+| 日历 | **FullCalendar 6** | 日/周/月/列表视图，实习生日程展示 |
+| Markdown 渲染 | **react-markdown** + `remark-gfm` + `rehype-raw` + `react-syntax-highlighter` | GFM 表格、代码高亮 |
+| 部署 | **GitHub Actions** → **GitHub Pages** | `main` 推送自动构建发布 |
+
+**与 lifeOS 的差异**：InternWiki 引入 FullCalendar 但增加**实习生选择器**——日历页顶部可切换实习生，查看其任务日程与日报关联；lifeOS 的日历是单人的，InternWiki 是多人按实习生过滤的。
+
+### 1.2 目录结构
 
 ```
 InternWiki/
-├── content/                    # 内容源（Markdown + JSON）
-│   ├── _shared/                # 团队共享内容
-│   │   ├── onboarding/         # 入职指南
-│   │   └── standards/          # 编码/写作规范
-│   ├── interns/                # 实习生空间
-│   │   └── {name}/
-│   │       ├── profile.md      # 个人信息（frontmatter 元数据）
-│   │       ├── daily/          # 日报 (YYYY-MM-DD.md)
-│   │       ├── weekly/         # 周报 (YYYY-Www.md)
-│   │       ├── projects/       # 项目（每个含 tasks.json + 文档）
-│   │       └── docs/           # 知识库文档
-│   └── config.yml              # 站点配置（标题、导航、实习生列表）
-├── src/templates/              # HTML 模板
-│   ├── base.html               # 基础布局（HTML 骨架）
-│   ├── article.html            # 文章/报告模板
-│   ├── intern-home.html        # 实习生主页（仪表盘）
-│   ├── listing.html            # 列表页模板（日报列表、文档列表）
-│   ├── index.html              # 首页模板（实习生目录）
-│   ├── _nav.html               # 导航栏
-│   ├── _toc.html               # 目录侧边栏
-│   └── _footer.html            # 页脚
-├── lib/                        # 构建系统模块
-│   ├── build.js                # 主构建管线（编排 9 个阶段）
-│   ├── config.js               # 路径和配置常量
-│   ├── parser.js               # Frontmatter 解析 + Mustache 模板引擎
-│   ├── markdown.js             # marked 封装 + 短代码预处理
-│   ├── shortcode.js            # 短代码注册表（PDF/Mermaid/Alert 等）
-│   ├── toc.js                  # TOC 从 headings 自动提取
-│   ├── tasks.js                # 任务树加载 + 级联完成逻辑
-│   ├── habits.js               # 习惯追踪（从日报 - [x] #tag 提取）
-│   ├── search.js               # 搜索索引生成（含拼音索引）
-│   ├── cache.js                # 增量构建缓存（SHA1 文件哈希）
-│   ├── css.js                  # CSS 模块打包（always/optional）
-│   ├── generator.js            # 页面生成器（文章、列表、目录）
-│   └── server.js               # 开发服务器 + WebSocket LiveReload
-├── assets/
-│   ├── css/
-│   │   ├── always/             # 始终加载的样式
-│   │   │   ├── variables.css   # CSS 变量和主题色
-│   │   │   ├── base.css        # 基础排版和重置
-│   │   │   └── nav.css         # 导航栏样式
-│   │   └── optional/           # 按需加载的样式
-│   │       ├── calendar.css    # 日历组件
-│   │       ├── pdf.css         # PDF 查看器
-│   │       └── search.css      # 搜索弹窗
-│   ├── js/
-│   │   ├── search.js           # 客户端模糊搜索
-│   │   ├── toc.js              # 目录滚动高亮
-│   │   ├── theme.js            # 暗/亮模式切换
-│   │   └── livereload.js       # 开发模式 WebSocket 客户端
-│   └── media/                  # 图片、PDF 等静态资源
+├── apps/
+│   └── web/                       # 主站（Vite + React）
+│       ├── content/               # 内容源（Markdown + JSON）
+│       │   ├── _shared/           # 团队共享
+│       │   │   ├── onboarding/    # 入职指南 (*.md)
+│       │   │   └── standards/     # 编码/写作规范 (*.md)
+│       │   ├── interns/           # 实习生空间（每人生成目录）
+│       │   │   └── {name}/
+│       │   │       ├── profile.md        # 个人档案（frontmatter 元数据）
+│       │   │       ├── daily/           # 日报 YYYY-MM-DD.md
+│       │   │       ├── weekly/          # 周报 YYYY-Www.md
+│       │   │       ├── monthly/         # 月报 YYYY-MM.md
+│       │   │       ├── docs/            # 知识库文档 *.md
+│       │   │       └── projects/        # 项目（每个含 README.md + tasks.json）
+│       │   │           └── {slug}/
+│       │   │               ├── README.md
+│       │   │               └── tasks.json
+│       │   └── site.yml           # 站点配置（标题、导航、实习生列表）
+│       ├── src/
+│       │   ├── main.tsx           # 入口
+│       │   ├── App.tsx           # 路由 + 布局
+│       │   ├── index.css         # Tailwind 入口
+│       │   ├── content/
+│       │   │   ├── schema.ts     # Zod 运行时 schema（与 Velite 同步）
+│       │   │   ├── loader.ts     # 数据加载器（getAll/getBySlug）
+│       │   │   └── .velite/      # Velite 生成（gitignore）
+│       │   ├── pages/
+│       │   │   ├── Home.tsx              # 首页：实习生目录 + 全站概览
+│       │   │   ├── InternHome.tsx       # 实习生仪表盘
+│       │   │   ├── ReportPages.tsx      # 报告列表/详情（日/周/月/文档 通用）
+│       │   │   ├── Projects.tsx         # 任务树页
+│       │   │   ├── Calendar.tsx        # 日历页（实习生选择 + 日程视图）
+│       │   │   └── Habits.tsx           # 习惯追踪页
+│       │   ├── components/
+│       │   │   ├── MarkdownView.tsx     # Markdown 渲染
+│       │   │   ├── ReportList.tsx       # 报告列表
+│       │   │   ├── ReportDetail.tsx     # 报告详情
+│       │   │   ├── RelatedReports.tsx   # 上下层/相邻报告链接
+│       │   │   ├── TaskTree.tsx         # Git 风格任务树
+│       │   │   ├── Heatmap.tsx          # 贡献热力图
+│       │   │   ├── InternSelect.tsx     # 实习生选择器（日历等页面共用）
+│       │   │   ├── SearchModal.tsx      # 搜索弹窗
+│       │   │   └── ThemeToggle.tsx      # 暗/亮模式
+│       │   ├── lib/
+│       │   │   └── utils.ts            # cn() 等工具
+│       │   └── hooks/
+│       │       └── useHabits.ts        # 习惯数据提取
+│       ├── public/               # 静态资源（favicon 等）
+│       ├── velite.config.ts      # Velite 内容 schema + collections
+│       ├── vite.config.ts        # Vite 配置（base 路径、React 插件）
+│       ├── tsconfig.json
+│       └── eslint.config.js
 ├── scripts/
-│   └── cli.js                  # CLI 入口（new-intern / new-report / task）
-├── dist/                       # 构建输出目录（gitignore）
+│   └── cli.mjs                  # CLI（new-intern / new-report / task）
+├── .github/workflows/deploy.yml # CI/CD
+├── pnpm-workspace.yaml
 ├── package.json
-├── .gitignore
-├── PLAN.md                     # 本文件
+├── PLAN.md
 └── README.md
 ```
 
-### 1.2 构建管线 (`lib/build.js`)
-
-参考 gongshangzheng.github.io 的 9 阶段管线：
+### 1.3 数据流（参考 lifeOS）
 
 ```
-┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-│ 1. 初始化 &  │──▶│ 2. 资源复制 & │──▶│ 3. 内容收集  │
-│   缓存加载   │   │   CSS 打包   │   │              │
-└──────────────┘   └──────────────┘   └──────┬───────┘
-                                             │
-                    ┌────────────────────────┤
-                    ▼                        ▼
-          ┌──────────────────┐     ┌──────────────────┐
-          │ 4a. Markdown     │     │ 4b. 加载任务树   │
-          │     解析 + 短代码│     │   + 习惯提取     │
-          └────────┬─────────┘     └────────┬─────────┘
-                   │                        │
-                   └────────────┬───────────┘
-                                ▼
-                     ┌──────────────────┐
-                     │ 5. 模板渲染      │
-                     │  (布局 + 注入)   │
-                     └────────┬─────────┘
-                              │
-              ┌───────────────┼───────────────┐
-              ▼               ▼               ▼
-     ┌──────────────┐ ┌────────────┐ ┌──────────────┐
-     │ 6. 列表页    │ │ 7. 搜索    │ │ 8. 缓存保存  │
-     │   生成       │ │   索引     │ │   & 清理     │
-     └──────────────┘ └────────────┘ └──────────────┘
+┌───────────────────────────────┐
+│ Markdown / JSON (content/)    │  ← 人工编辑，git 友好
+└──────────────┬────────────────┘
+               │ Velite 构建时解析（Zod schema 校验）
+               ▼
+┌───────────────────────────────┐
+│ 类型化 JSON (.velite/)        │
+└──────────────┬────────────────┘
+               │ Vite 静态打包
+               ▼
+┌───────────────────────────────┐
+│ React 组件 + Tailwind UI      │  ← 客户端渲染
+└──────────────┬────────────────┘
+               │ GitHub Pages 部署
+               ▼
+┌───────────────────────────────┐
+│ InternWiki 站点               │
+└───────────────────────────────┘
 ```
 
-**阶段说明**：
+### 1.4 Velite 内容 Schema (`apps/web/velite.config.ts`)
 
-1. **初始化** — 读取 `.internwiki-cache/build-manifest.json`，检查缓存有效性
-2. **资源 & CSS** — 复制 `assets/media/` 到 `dist/`；`always/` CSS 合并为一个文件，`optional/` 按需复制
-3. **内容收集** — 扫描 `content/interns/` 发现所有实习生及其文件，扫描 `content/_shared/`
-4a. **Markdown 解析** — 提取 frontmatter → 短代码占位 → `marked` 转 HTML → 短代码渲染回注 → TOC 提取
-4b. **任务 & 习惯** — 解析每个项目的 `tasks.json`，从日报中提取 `- [x] desc #tag` 习惯数据
-5. **模板渲染** — 将内容注入模板，组合布局（base + nav + content + toc + footer）
-6. **列表页** — 为每个实习生生成日报列表、周报列表、文档列表；生成全站实习生目录
-7. **搜索索引** — 生成 `dist/search-index.json`（含 pinyin-pro 拼音索引用于中文搜索）
-8. **缓存保存** — 计算 SHA1 哈希更新缓存，删除不再存在的输出文件
+参考 lifeOS 的 `velite.config.ts`，按实习生命名空间定义 collections：
 
-### 1.3 模板引擎 (`lib/parser.js`)
+```ts
+import { defineConfig, defineCollection, s } from 'velite'
 
-自定义 Mustache 风格引擎（参考 gongshangzheng 的实现）：
+// 报告（日报/周报/月报/文档 共用）
+const reportSchema = s
+  .object({
+    title: s.string().optional(),
+    slug: s.string().optional(),
+    date: s.isodate().optional(),
+    summary: s.string().optional(),
+    metadata: s.record(s.string(), s.unknown()).default({}),
+    body: s.raw(),
+  })
+  .transform((data, { meta }) => {
+    const parts = ((meta.path ?? '').replace(/\.md$/, '')).split('/')
+    const filename = parts.pop() ?? ''
+    const intern = parts[parts.indexOf('interns') + 1] ?? ''
+    return {
+      ...data,
+      title: data.title ?? filename,
+      slug: data.slug ?? filename,
+      intern,
+    }
+  })
 
-| 语法 | 说明 |
-|------|------|
-| `{{variable}}` | 变量插值（自动 HTML 转义） |
-| `{{{variable}}}` | 原始 HTML 注入 |
-| `{{#array}}...{{/array}}` | 数组循环 |
-| `{{^array}}...{{/array}}` | 空判断（数组为空时显示） |
-| `<!-- INCLUDE partial.html -->` | 引入局部模板 |
-| `<!-- INJECT key -->` | 命名注入点（用于布局组合） |
+// 项目
+const projectSchema = s.object({
+  title: s.string().optional(),
+  slug: s.string().optional(),
+  status: s.enum(['active', 'completed', 'paused', 'planned']).default('active'),
+  startDate: s.isodate().optional(),
+  endDate: s.isodate().nullish(),
+  tags: s.array(s.string()).default([]),
+  summary: s.string().optional(),
+  metadata: s.record(s.string(), s.unknown()).default({}),
+  body: s.raw(),
+})
 
-### 1.4 短代码系统 (`lib/shortcode.js`)
+// 实习生档案
+const internSchema = s.object({
+  name: s.string(),
+  team: s.string().optional(),
+  role: s.string().optional(),
+  startDate: s.isodate().optional(),
+  body: s.raw(),
+})
 
-可扩展的短代码注册表，参考 gongshangzheng 的 `{{< name >}}` 语法：
+export default defineConfig({
+  root: 'content',
+  output: {
+    data: 'src/content/.velite',
+    assets: 'src/content/.velite/assets',
+    base: '/InternWiki/assets/',
+    name: '[name]-[hash:6].[ext]',
+    clean: true,
+  },
+  collections: {
+    interns: defineCollection({ name: 'interns', pattern: 'interns/*/profile.md', schema: internSchema }),
+    daily:    defineCollection({ name: 'daily',    pattern: 'interns/*/daily/**/*.md',    schema: reportSchema }),
+    weekly:   defineCollection({ name: 'weekly',   pattern: 'interns/*/weekly/**/*.md',   schema: reportSchema }),
+    monthly:  defineCollection({ name: 'monthly',  pattern: 'interns/*/monthly/**/*.md',  schema: reportSchema }),
+    docs:     defineCollection({ name: 'docs',     pattern: 'interns/*/docs/**/*.md',     schema: reportSchema }),
+    shared:   defineCollection({ name: 'shared',   pattern: '_shared/**/*.md',            schema: reportSchema }),
+    projects: defineCollection({ name: 'projects', pattern: 'interns/*/projects/*/README.md', schema: projectSchema }),
+  },
+  markdown: { gfm: true, removeComments: true },
+})
+```
 
-| 短代码 | 输出 | 说明 |
-|--------|------|------|
-| `{{< pdf src="..." title="..." >}}` | PDF.js canvas 容器 | 懒加载 PDF.js CDN 渲染 PDF 页面 |
-| `{{< mermaid >}}...{{< /mermaid >}}` | `<pre class="mermaid">` | 客户端 Mermaid.js 渲染图表 |
-| `{{< alert type="info\|warning\|danger" >}}...{{< /alert >}}` | styled callout div | 带样式的提示框 |
-| `{{< tasktree path="..." >}}` | 交互式任务树 | 从 tasks.json 生成 git 风格分支图 |
-| `{{< heatmap intern="..." >}}` | 贡献热力图 | GitHub 风格日期 × 活跃度网格 |
+> 任务树 `tasks.json` 不走 Velite（Velite 主要处理 Markdown），改为构建脚本扫描收集，或用 Vite 的 `import.meta.glob` 在客户端直接导入。详见 3.1。
 
-### 1.5 技术依赖
+### 1.5 关键依赖
 
-**生产依赖（最小化）**：
-
-| 包名 | 用途 | 备注 |
-|------|------|------|
-| `marked` | Markdown → HTML | 核心依赖 |
-| `gray-matter` | YAML Frontmatter 提取 | 支持 YAML + JSON |
-| `ws` | WebSocket | LiveReload 开发服务器 |
-| `chokidar` | 文件监听 | 开发模式增量构建 |
-| `mime-types` | MIME 类型 | 开发服务器静态文件 |
-
-**开发/可选**：
-
-| 包名 | 用途 | 备注 |
-|------|------|------|
-| `pinyin-pro` | 拼音搜索索引 | 仅在构建时使用 |
-
-**明确不使用**：
-- ❌ React / Vue / Svelte（纯 HTML 输出）
-- ❌ Vite / Webpack / Rollup（自定义 CSS 打包）
-- ❌ Hugo / Jekyll / Astro（自定义 SSG）
-- ❌ Express / Koa（使用原生 `http` 模块）
-- ❌ 数据库（文件系统即数据库）
+| 包 | 用途 |
+|----|------|
+| `react` / `react-dom` 19 | UI |
+| `react-router-dom` 7 | 路由 |
+| `velite` | Markdown → JSON |
+| `tailwindcss` v4 + `@tailwindcss/vite` | 样式 |
+| `class-variance-authority` / `clsx` / `tailwind-merge` | 样式工具 |
+| `lucide-react` | 图标 |
+| `react-markdown` / `remark-gfm` / `rehype-raw` / `react-syntax-highlighter` | Markdown 渲染 |
+| `zustand` | 状态 |
+| `recharts` | 图表 |
+| `@fullcalendar/react` + `daygrid` + `timegrid` + `interaction` + `list` | 日历 |
+| `zod` | 运行时校验 |
+| `gray-matter` | CLI 解析 frontmatter |
 
 ---
 
-## 第二阶段：内容模型 & 模板
+## 第二阶段：内容模型
 
-### 2.1 日报 (`content/interns/{name}/daily/YYYY-MM-DD.md`)
+所有内容均为 Markdown（frontmatter + 正文）。实习生通过文件名/目录归属到 `{name}` 命名空间。
+
+### 2.1 日报 `content/interns/{name}/daily/YYYY-MM-DD.md`
 
 ```yaml
 ---
+title: 日报 - 2026-07-07 周二
+slug: 2026-07-07
 date: 2026-07-07
-type: daily
-intern: alice
+summary: 完成用户认证接口，推进限流中间件
 tags: [后端, API]
 ---
 
 ## ✅ 今日完成
-- 完成了用户认证接口 PR #42
+- 完成用户认证接口 PR #42
 - Review 了 Bob 的数据库迁移
 
 ## 🚧 进行中
 - API 限流中间件 (60%)
-- 阅读 Redis 缓存模式
 
 ## 🚫 阻塞项
-- 等待 DevOps 配置 staging Redis 实例
+- 等待 DevOps 配置 staging Redis
 
 ## 📝 笔记
-发现了令牌桶算法的有用模式
+发现令牌桶算法的有用模式
 
 ## 🔄 习惯打卡
 - [x] 晨会 #routine
@@ -202,201 +245,338 @@ tags: [后端, API]
 - [ ] 文档更新 #writing
 ```
 
-**构建时处理**：
-- 提取 `- [x] desc #tag` → 习惯追踪数据
-- 提取各部分内容 → 周报自动聚合
+构建时从 `- [x] desc #tag` 提取习惯数据。
 
-### 2.2 周报 (`content/interns/{name}/weekly/YYYY-Www.md`)
+### 2.2 周报 `content/interns/{name}/weekly/YYYY-Www.md`
 
 ```yaml
 ---
-week: 2026-W28
-type: weekly
-intern: alice
+slug: 2026-W28
+date: 2026-07-07
+summary: 交付认证接口，解决 3 个支付 Bug
+tags: [周报]
 ---
 
 ## 📊 本周总结
-<!-- 构建时自动注入本周日报摘要 -->
-
 ## 🎯 关键成果
-- 交付了用户认证接口
-- 解决了支付流程中 3 个关键 Bug
-
+- 交付用户认证接口
+- 解决支付流程 3 个关键 Bug
 ## 📈 数据
 - PR 合并: 4
-- 代码审查: 6
-- 文档撰写: 2
-
 ## 🔮 下周计划
-- 完成限流中间件
-- 启动集成测试框架
-
 ## 💭 反思
-本周感觉很有成效...
 ```
 
-### 2.3 项目任务树 (`content/interns/{name}/projects/{slug}/tasks.json`)
-
-```json
-{
-  "project": "搜索引擎",
-  "intern": "alice",
-  "status": "active",
-  "startDate": "2026-06-01",
-  "tasks": [
-    { "id": "t1", "title": "设计索引 Schema", "status": "done", "completedDate": "2026-06-05" },
-    {
-      "id": "t2",
-      "title": "实现爬虫",
-      "status": "in-progress",
-      "children": [
-        { "id": "t2a", "title": "URL 队列", "status": "done" },
-        { "id": "t2b", "title": "HTML 解析器", "status": "in-progress" },
-        { "id": "t2c", "title": "Robots.txt 遵守", "status": "todo" }
-      ]
-    },
-    { "id": "t3", "title": "排序算法", "status": "todo", "blockedBy": ["t2"] }
-  ]
-}
-```
-
-**任务状态**：`todo` / `in-progress` / `done` / `blocked`
-**级联完成**：子任务全部 `done` → 父任务自动 `done`
-
-### 2.4 实习生档案 (`content/interns/{name}/profile.md`)
+### 2.3 月报 `content/interns/{name}/monthly/YYYY-MM.md`
 
 ```yaml
 ---
-name: 张三
-team: 后端组
-start_date: 2026-06-01
-role: 后端开发实习生
+slug: 2026-07
+date: 2026-07-31
+summary: 7 月实习总结：认证系统上线，启动搜索项目
+tags: [月报]
 ---
 
-## 自我介绍
-我是后端组实习生，主要参与搜索引擎和数据管道相关工作...
+## 📅 月度概览
+<!-- 自动聚合本月周报关键成果与日报统计 -->
+
+## 🏆 重要成果
+- 用户认证系统全量上线
+- 搜索引擎项目立项并完成 schema 设计
+
+## 📊 月度数据
+- 工作日: 22
+- PR 合并: 18
+- 文档产出: 6 篇
+
+## 📈 成长复盘
+- 技术成长：
+- 协作成长：
+
+## 🔮 下月计划
+- 完成搜索引擎 MVP
+- 推进集成测试框架
 ```
 
-### 2.5 知识库文档 (`content/interns/{name}/docs/*.md`)
+月报详情页自动聚合本月周报摘要与日报统计（PR 数、习惯打卡率等）。
+
+### 2.4 文档 `content/interns/{name}/docs/*.md`
 
 ```yaml
 ---
 title: Redis 缓存指南
-type: doc
-intern: alice
-created: 2026-07-05
+slug: redis-cache-guide
+date: 2026-07-05
 updated: 2026-07-07
 tags: [redis, 缓存, 后端]
-toc: true
 ---
 
 ## 概述
 ...
 
 ## 架构图
-{{< mermaid >}}
+```mermaid
 graph LR
   Client --> Cache
   Cache --> DB
-{{< /mermaid >}}
+```
 
 ## 配置参考
-{{< pdf src="/media/redis-config-spec.pdf" title="Redis 配置规范" >}}
+...
 ```
 
+### 2.5 实习生档案 `content/interns/{name}/profile.md`
+
+```yaml
+---
+name: 张三
+slug: alice
+team: 后端组
+role: 后端开发实习生
+startDate: 2026-06-01
 ---
 
-## 第三阶段：项目管理功能
+## 自我介绍
+后端组实习生，主要参与搜索引擎和数据管道相关工作...
+```
 
-### 3.1 任务树引擎 (`lib/tasks.js`)
+### 2.6 报告层级导航
 
-- 加载 `tasks.json`，递归解析任务层级
-- **级联完成**：子任务全部完成 → 父任务自动标记完成
-- **状态统计**：完成数 / 总数 / 百分比
-- **分支可视化**：生成 git 风格的任务树 HTML（参考 lifeOS 的实现）
-- **阻塞关系**：`blockedBy` 字段支持任务依赖
+参考 lifeOS 日报中的上下层链接，每篇报告 frontmatter 或正文带导航：
+- 日报 → 所属周报 / 月报
+- 周报 → 所属月报 + 本周日报
+- 月报 → 本月周报 + 所属年报（可选）
 
-### 3.2 习惯追踪 (`lib/habits.js`)
-
-- 扫描日报中的 `- [x] desc #tag` 模式
-- 生成 `tag × date` 热力图数据（参考 lifeOS 的贡献热力图）
-- 计算连续打卡天数、完成率、周趋势
-
-### 3.3 实习生仪表盘 (`src/templates/intern-home.html`)
-
-每个实习生主页自动生成以下组件：
-
-| 组件 | 数据来源 | 展示形式 |
-|------|----------|----------|
-| 活动热力图 | 日报日期 | GitHub 风格贡献网格 |
-| 项目进度 | tasks.json | 进度条 + 下一任务预览 |
-| 习惯打卡 | 日报习惯提取 | 连续天数 + 30 天趋势线 |
-| 最近报告 | 最新 5 篇日报/周报 | 卡片列表带摘要 |
-| 任务统计 | 所有任务树 | 完成/进行中/待办统计 |
-| 文档列表 | docs/ 目录 | 按日期排序的文档列表 |
+由 `RelatedReports` 组件按 slug/date 自动计算，无需手写。
 
 ---
 
-## 第四阶段：高级功能 & 打磨
+## 第三阶段：任务管理体系（JSON）
 
-### 4.1 搜索系统 (`lib/search.js` + `assets/js/search.js`)
+每个实习生拥有自己的任务体系，以 JSON 文件存放数据。参考 lifeOS 的 `tasks.json` 结构：项目为粒度，每项目一个 `tasks.json`，支持递归子任务、状态、周期任务。
 
-- 构建时生成 `dist/search-index.json`
-- 中文内容使用 `pinyin-pro` 生成拼音索引，支持拼音模糊搜索
-- 客户端轻量级模糊匹配
-- 过滤器：按实习生、类型（日报/周报/文档）、标签、日期范围
+### 3.1 数据存放与加载
 
-### 4.2 PDF 展示 (`lib/shortcode.js` pdf handler)
+```
+content/interns/{name}/projects/{slug}/
+├── README.md     # 项目说明（frontmatter: title/status/startDate/tags/timeline）
+└── tasks.json    # 任务树数据
+```
 
-- 短代码 `{{< pdf src="..." title="..." >}}`
-- 构建时注入 `<canvas data-pdf="...">` 容器
-- 运行时懒加载 PDF.js CDN 渲染 PDF 各页面
+**加载方式**（二选一，推荐 A）：
 
-### 4.3 开发服务器 (`lib/server.js`)
+- **A. 构建脚本收集**：`scripts/collect-tasks.mjs` 扫描所有 `tasks.json`，输出 `public/tasks-index.json`，客户端 `fetch` 加载（与 lifeOS dist 中的 `*.tasks.json` 一致）。
+- **B. Vite glob 导入**：`import.meta.glob('/content/interns/*/projects/*/tasks.json', { eager: true })`，构建时内联。
 
-- 原生 `http` 模块提供静态文件服务（`dist/` 目录）
-- `chokidar` 监听 `content/`、`src/templates/`、`assets/`
-- 变更时增量重构建 + WebSocket 通知浏览器刷新
-- 默认端口 3000，可配置
+### 3.2 tasks.json 结构
 
-### 4.4 增量构建缓存 (`lib/cache.js`)
+```json
+{
+  "project": "search-engine",
+  "intern": "alice",
+  "tasks": [
+    { "id": "t1", "title": "设计索引 Schema", "status": "completed", "startDate": "2026-06-01", "endDate": "2026-06-05", "description": "", "children": [] },
+    {
+      "id": "t2",
+      "title": "实现爬虫",
+      "status": "active",
+      "startDate": "2026-06-06",
+      "endDate": null,
+      "description": "URL 队列 + HTML 解析",
+      "children": [
+        { "id": "t2-1", "title": "URL 队列", "status": "completed", "startDate": null, "endDate": null, "description": "", "children": [] },
+        { "id": "t2-2", "title": "HTML 解析器", "status": "active", "startDate": null, "endDate": null, "description": "", "children": [] },
+        { "id": "t2-3", "title": "Robots.txt 遵守", "status": "planned", "startDate": null, "endDate": null, "description": "", "children": [] }
+      ]
+    },
+    { "id": "r-1", "title": "每日代码提交", "status": "active", "description": "", "recurring": { "pattern": "daily", "startTime": "21:00", "endTime": "21:30", "activeFrom": "2026-07-07", "excludeDates": [] }, "children": [] }
+  ]
+}
+```
 
-- SHA1 文件哈希 + 依赖关系图
-- 内容文件、模板文件、任务文件分别跟踪
-- 仅重建变更的页面
-- 缓存在 `.internwiki-cache/build-manifest.json`
+**任务状态**：`planned` / `active` / `completed` / `paused`
+**递归层级**：`children[]` 任意深度
+**周期任务**：`recurring` 字段（daily/weekly），可展开为日历事件
+**阻塞关系**（可选）：`blockedBy: ["t2"]`
 
-### 4.5 暗/亮模式
+### 3.3 任务树引擎 (`components/TaskTree.tsx`)
 
-- Tailwind 风格的 CSS 变量系统
-- 本地存储偏好，支持系统偏好自动检测
-- 导航栏切换按钮
+参考 lifeOS 的 Git 风格任务树：
+- 递归渲染，可展开/折叠，URL hash 持久化展开态（Zustand）
+- 状态图标：⚪ planned / 🔵 active / ✅ completed / ⏸ paused
+- **级联完成**：子任务全部 completed → 父任务自动标记 completed
+- **状态统计**：完成数 / 总数 / 百分比（进度条）
+- 任务详情面板：点击任务显示 description、时间区间、阻塞关系
+- 多项目聚合：实习生仪表盘聚合该实习生所有项目的任务树
 
----
-
-## 第五阶段：CLI 工具
-
-### 命令设计 (`scripts/cli.js`)
+### 3.4 CLI 任务管理 (`scripts/cli.mjs`)
 
 ```bash
-# 构建和开发
-npm run build              # 完整构建
-npm run build -- --clean   # 清除缓存后重建
-npm run serve              # 启动开发服务器（默认 :3000）
+# 任务增删改查（直接读写 tasks.json）
+pnpm cli task add    --intern alice --project search-engine --title "添加测试" --parent t2
+pnpm cli task done   --intern alice --project search-engine --id t2-2
+pnpm cli task list   --intern alice --project search-engine
+pnpm cli task stats  --intern alice          # 聚合所有项目统计
+```
+
+---
+
+## 第四阶段：页面、路由与仪表盘
+
+### 4.1 路由设计 (`src/App.tsx`)
+
+参考 lifeOS 的路由结构，加入实习生维度：
+
+```
+/                                  首页（实习生目录 + 全站概览）
+/calendar                          日历页（含实习生选择器）
+/calendar?intern=alice             指定实习生日程
+/interns/:name                     实习生仪表盘
+/interns/:name/daily               日报列表
+/interns/:name/daily/:slug         日报详情
+/interns/:name/weekly              周报列表
+/interns/:name/weekly/:slug        周报详情
+/interns/:name/monthly             月报列表
+/interns/:name/monthly/:slug       月报详情
+/interns/:name/docs                文档列表
+/interns/:name/docs/:slug          文档详情
+/interns/:name/projects            项目/任务树总览
+/interns/:name/projects/:slug      单项目任务树
+/shared                            团队共享文档
+```
+
+导航栏：首页 / 日历 / 实习生切换器（下拉）/ 搜索 / 暗亮模式。
+
+### 4.2 实习生仪表盘 (`pages/InternHome.tsx`)
+
+每个实习生主页自动生成：
+
+| 组件 | 数据来源 | 展示 |
+|------|----------|------|
+| 活动热力图 | 日报日期 | GitHub 风格贡献网格（`Heatmap`） |
+| 任务进度 | 所有 tasks.json | 进度条 + 当前 active 任务 |
+| 习惯打卡 | 日报 `- [x] #tag` | 连续天数 + 30 天趋势线（recharts） |
+| 最近报告 | 最新 5 篇日/周/月报 | 卡片列表带摘要 |
+| 任务统计 | 所有任务树 | completed/active/planned 饼图 |
+| 文档列表 | docs/ | 按更新时间排序 |
+
+### 4.3 报告页（`pages/ReportPages.tsx`）
+
+复用 lifeOS 的 `makeListPage` / `makeDetailPage` 工厂模式，按 collection 配置（daily/weekly/monthly/docs）生成列表与详情，详情页带 `RelatedReports` 上下层导航。
+
+### 4.4 习惯追踪 (`pages/Habits.tsx` + `hooks/useHabits.ts`)
+
+- 扫描实习生所有日报的 `- [x] desc #tag` 模式
+- 生成 `tag × date` 热力图数据
+- 计算连续打卡天数、完成率、周/月趋势
+
+### 4.5 日历页 (`pages/Calendar.tsx`)
+
+参考 lifeOS 的 `Calendar.tsx`（基于 FullCalendar 6），核心改动是增加**实习生选择器**：
+
+**页面结构**：
+
+```
+┌──────────────────────────────────────────────────────┐
+│ [实习生选择器 ▼]                          [下载 ICS] │
+├────────────────────────────┬─────────────────────────┤
+│                            │  侧边栏                  │
+│   FullCalendar             │  ┌─────┬──────┐         │
+│   ┌──────────────────┐     │  │待办 │已完成│         │
+│   │  月  周  3日  日  │     │  ├─────┴──────┤         │
+│   │                  │     │  │ 今日事项列表  │         │
+│   │   日历网格       │     │  │ 无日期任务    │         │
+│   │   (任务事件着色)  │     │  │ 近期完成      │         │
+│   └──────────────────┘     │  └──────────────┘         │
+└────────────────────────────┴─────────────────────────┘
+```
+
+**实习生选择器** (`components/InternSelect.tsx`)：
+- 顶部下拉框，列出所有实习生
+- 默认选中第一个实习生（或 URL `?intern=` 参数指定的）
+- 切换实习生时，重新加载该实习生的所有任务事件
+- 选择器状态同步到 URL query param，可分享链接
+
+**数据来源**（按选中实习生过滤）：
+
+| 事件类型 | 来源 | 说明 |
+|----------|------|------|
+| 有日期任务 | `tasks.json` 中 `startDate` 非空的任务 | 全天或多日事件 |
+| 定时任务 | `tasks.json` 中带 `startTime`/`endTime` 的任务 | 时间轴视图显示 |
+| 周期任务 | `tasks.json` 中 `recurring` 字段 | 展开为日期区间内每日/每周实例 |
+| 日报标记 | 日报 `daily/*.md` 的 `date` | 日历上的小圆点标记，点击跳转日报详情 |
+
+**事件着色**：
+- 按项目 slug 分配颜色（每个项目一种主题色）
+- completed 任务显示删除线 + 透明度降低
+- 参考 lifeOS 的 `PROJECT_TASK_COLORS` 映射
+
+**日历视图**：
+- 月视图 / 周视图 / 3 日视图 / 日视图 / 列表视图
+- 中文本地化（`locale="zh-cn"`，周一为首日）
+- 当前时间指示线（`nowIndicator`）
+
+**侧边栏**（参考 lifeOS）：
+- 待办 / 已完成 两个 Tab
+- 今日事项列表（点击跳详情弹窗）
+- 无日期任务列表
+- 近期完成任务列表（30 天内）
+
+**详情弹窗**：
+- 点击事件弹出详情：标题、项目、状态、日期/时间、描述、子任务进度
+- 如果当天有日报，显示「查看当日日报」链接
+
+---
+
+## 第五阶段：高级功能
+
+### 5.1 搜索 (`components/SearchModal.tsx`)
+
+- Velite 构建后生成 `public/search-index.json`（标题/摘要/正文/slug/intern/type）
+- 客户端轻量模糊匹配（可选 Fuse.js 或自实现）
+- 过滤器：按实习生、类型（日报/周报/月报/文档）、标签
+- 中文搜索：可选接入 `pinyin-pro` 生成拼音索引
+
+### 5.2 暗/亮模式 (`components/ThemeToggle.tsx`)
+
+- Tailwind v4 CSS 变量主题
+- 本地存储偏好 + 系统偏好检测
+- 导航栏切换按钮
+
+### 5.3 部署 (`.github/workflows/deploy.yml`)
+
+```yaml
+# main 推送 → pnpm install → velite build → vite build → 发布 gh-pages
+# base 路径: /InternWiki/
+```
+
+构建命令（对齐 lifeOS）：
+```bash
+velite build && tsc -b && vite build
+```
+
+---
+
+## 第六阶段：CLI 工具 (`scripts/cli.mjs`)
+
+```bash
+# 构建/开发
+pnpm dev                          # Vite 开发服务器（默认 :5173，HMR）
+pnpm build                        # velite build + vite build
 
 # 实习生管理
-node scripts/cli.js new-intern --name 张三 --team 后端组 --start-date 2026-06-01
+pnpm cli new-intern --name 张三 --slug alice --team 后端组 --start-date 2026-06-01
 
 # 报告管理
-node scripts/cli.js new-report --intern alice --type daily [--date 2026-07-07]
-node scripts/cli.js new-report --intern alice --type weekly [--week 2026-W28]
+pnpm cli new-report --intern alice --type daily  [--date 2026-07-07]
+pnpm cli new-report --intern alice --type weekly [--week 2026-W28]
+pnpm cli new-report --intern alice --type monthly [--month 2026-07]
+pnpm cli new-doc    --intern alice --title "Redis 缓存指南"
 
-# 任务管理
-node scripts/cli.js task add --intern alice --project search-engine --title "添加测试" --parent t2
-node scripts/cli.js task done --intern alice --project search-engine --id t2b
-node scripts/cli.js task list --intern alice --project search-engine
-node scripts/cli.js task stats --intern alice
+# 任务管理（见 3.4）
 ```
+
+CLI 生成带 frontmatter 的 Markdown 模板与目录结构。
 
 ---
 
@@ -404,19 +584,22 @@ node scripts/cli.js task stats --intern alice
 
 | 阶段 | 内容 | 产出 |
 |------|------|------|
-| **Phase 1** | 核心 SSG + 项目骨架 | 可将 Markdown 编译为 HTML |
-| **Phase 2** | 内容模型 + 模板 | 日报/周报/文档完整渲染 |
-| **Phase 3** | 项目管理 | 任务树、习惯追踪、仪表盘 |
-| **Phase 4** | 高级功能 | 搜索、PDF、LiveReload |
-| **Phase 5** | CLI 工具 | 便捷的内容创建和管理命令 |
+| **Phase 1** | 骨架 + Velite + 路由 | Markdown 经 Velite 编译，React 页面可渲染 |
+| **Phase 2** | 内容模型 | 日报/周报/月报/文档/档案完整渲染 |
+| **Phase 3** | 任务体系 | tasks.json 任务树、级联完成、CLI 管理 |
+| **Phase 4** | 仪表盘 + 习惯 + 日历 | 实习生主页、热力图、习惯趋势、日历日程 |
+| **Phase 5** | 高级功能 | 搜索、暗亮模式、部署 |
+| **Phase 6** | CLI | 内容创建与管理命令 |
 
 ---
 
 ## 验证计划
 
-1. **基础构建** — 创建示例实习生空间，包含几篇日报和周报，运行 `npm run build` 确认生成正确的 HTML
-2. **模板渲染** — 确认短代码（PDF、Mermaid、Alert）正确渲染
-3. **任务树** — 创建 tasks.json，验证级联完成逻辑和可视化
-4. **搜索** — 确认搜索索引正确生成，客户端搜索可用
-5. **开发服务器** — 启动 `npm run serve`，修改 Markdown 文件确认 LiveReload 生效
-6. **CLI** — 测试 new-intern 和 new-report 命令生成正确的文件
+1. **Velite 构建** — 创建示例实习生（含几篇日/周/月报与文档），`pnpm content:build` 确认 `.velite/` 生成类型化 JSON
+2. **路由渲染** — `pnpm dev` 确认列表/详情页正确渲染 Markdown（GFM 表格、代码高亮）
+3. **任务树** — 创建 tasks.json，验证递归渲染、级联完成、状态统计
+4. **仪表盘** — 确认热力图、习惯趋势、任务统计正确聚合
+5. **日历** — 确认实习生选择器切换、任务事件渲染、周期任务展开、日报跳转
+6. **搜索** — 确认搜索索引生成、过滤与模糊匹配可用
+7. **部署** — 推送 main，确认 GitHub Actions 构建发布到 gh-pages
+8. **CLI** — 测试 new-intern / new-report / task 命令生成正确文件

@@ -1,0 +1,23 @@
+{
+  "name": "internwiki",
+  "version": "0.1.0",
+  "private": true,
+  "description": "InternWiki — 多人实习文档平台，实习生之间相互分享工作成果。",
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=25"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @internwiki/web dev",
+    "build": "pnpm --filter @internwiki/web build",
+    "preview": "pnpm --filter @internwiki/web preview",
+    "lint": "pnpm -r --parallel run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,md,json,css}\"",
+    "typecheck": "pnpm -r --parallel run typecheck",
+    "content:build": "pnpm --filter @internwiki/web content:build"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}

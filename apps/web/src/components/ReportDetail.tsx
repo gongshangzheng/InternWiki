@@ -18,6 +18,7 @@ type ReportDetailProps = {
   backTo: string
   backLabel: string
   notFoundTitle?: string
+  internSlug?: string
 }
 
 function formatDate(iso?: string): string | null {
@@ -31,6 +32,7 @@ export function ReportDetail({
   backTo,
   backLabel,
   notFoundTitle = '未找到',
+  internSlug,
 }: ReportDetailProps) {
   if (!item) {
     return (
@@ -86,7 +88,7 @@ export function ReportDetail({
         )}
       </header>
 
-      <MarkdownView body={item.body} />
+      <MarkdownView body={item.body} internSlug={internSlug} />
     </article>
   )
 }

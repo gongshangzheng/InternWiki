@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -7,7 +7,7 @@ import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Check, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { internalLinkHref } from '@/lib/markdown'
+import { internalLinkHref, preprocessWikiLinks } from '@/lib/markdown'
 
 // Track .dark class on <html> so code blocks can switch theme reactively
 function useDarkMode() {
@@ -107,7 +107,7 @@ function MarkdownLink({
   children?: ReactNode
 }) {
   const target = href ?? ''
-  const internal = target ? internalLinkHref(target) : null
+  const internal = target ? internalLinkHref(target, currentInternSlug) : null
 
   if (internal) {
     return <Link to={internal} className="lo-link">{children}</Link>
@@ -181,9 +181,17 @@ const components: Components = {
 type MarkdownViewProps = {
   body: string
   className?: string
+  /** Intern slug for building intern-scoped links (project/task deep links) */
+  internSlug?: string
 }
 
-export function MarkdownView({ body, className }: MarkdownViewProps) {
+// Module-level variable to pass internSlug to MarkdownLink without prop drilling
+// through react-markdown's component system.
+let currentInternSlug: string | undefined
+
+export function MarkdownView({ body, className, internSlug }: MarkdownViewProps) {
+  currentInternSlug = internSlug
+  const processedBody = useMemo(() => preprocessWikiLinks(body), [body])
   return (
     <div className={cn('md-body text-[0.92rem] leading-relaxed text-body', className)}>
       <ReactMarkdown
@@ -191,7 +199,7 @@ export function MarkdownView({ body, className }: MarkdownViewProps) {
         rehypePlugins={[rehypeRaw]}
         components={components}
       >
-        {body}
+        {processedBody}
       </ReactMarkdown>
     </div>
   )

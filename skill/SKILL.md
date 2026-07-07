@@ -41,6 +41,7 @@ InternWiki/
 | 创建实习生档案 | `references/content-creation.md` §1 | `pnpm cli new-intern --name 张三 --slug zhangsan` |
 | 写日报/周报/月报 | `references/content-creation.md` §2-4 | `pnpm cli new-report --intern alice --type daily` |
 | 写技术文档 | `references/content-creation.md` §5 | `pnpm cli new-doc --intern alice --title "Redis 指南"` |
+| 在报告中链接项目/任务 | `references/content-creation.md` §10 | `[[project:slug]]` / `[[task:slug/id]]` |
 | 创建项目 | `references/project-management.md` §1 | `pnpm cli new-project --intern alice --slug xxx` |
 | 管理任务树 | `references/project-management.md` §2-7 | `pnpm cli task add/list/done/move/remove` |
 | 放置图片/截图 | `references/assets-and-git.md` §1 | 放 `public/interns/{slug}/` 下 |

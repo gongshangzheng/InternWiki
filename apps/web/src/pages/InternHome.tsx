@@ -248,7 +248,7 @@ export function InternHome() {
       {/* Bio */}
       {intern.body && (
         <div className="lo-card p-4">
-          <MarkdownView body={intern.body} />
+          <MarkdownView body={intern.body} internSlug={internSlug} />
         </div>
       )}
 

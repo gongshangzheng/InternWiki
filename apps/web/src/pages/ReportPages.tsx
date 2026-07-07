@@ -112,6 +112,7 @@ export function ReportDetailPage({ type }: { type: CollectionKey }) {
         backTo={cfg.basePath(internSlug)}
         backLabel={`${cfg.label}列表`}
         notFoundTitle={`未找到${cfg.label}`}
+        internSlug={internSlug}
       />
       {item?.date && (
         <RelatedReports type={type} intern={internSlug} slug={item.slug} date={item.date} />

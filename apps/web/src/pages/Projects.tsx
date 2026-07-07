@@ -42,14 +42,27 @@ function StatusLegend() {
   )
 }
 
+// ── Helper: find task by ID in tree ───────────────────────
+
+function findTaskById(tasks: TaskNode[], id: string): TaskNode | null {
+  for (const task of tasks) {
+    if (task.id === id) return task
+    const found = findTaskById(task.children, id)
+    if (found) return found
+  }
+  return null
+}
+
 // ── Project README renderer ──────────────────────────────────
 
 function ProjectReadme({
   project,
   colorIndex,
+  internSlug,
 }: {
   project: Projects
   colorIndex: number
+  internSlug: string
 }) {
   const StatusIcon = PROJECT_STATUS_CONFIG[project.status]?.icon ?? GitBranch
   const color = getProjectColor(Math.max(0, colorIndex))
@@ -86,7 +99,7 @@ function ProjectReadme({
 
       {/* Markdown body */}
       {project.body ? (
-        <MarkdownView body={project.body} />
+        <MarkdownView body={project.body} internSlug={internSlug} />
       ) : (
         <p className="text-sm text-dim">暂无 README 内容。</p>
       )}
@@ -107,12 +120,18 @@ export function ProjectsPage() {
 
   const [activeSlug, setActiveSlug] = useState<string | null>(() => {
     const hash = window.location.hash.slice(1)
-    if (hash && allProjects.some((p) => p.slug === hash)) return hash
+    const pureSlug = hash.split('?')[0]
+    if (pureSlug && allProjects.some((p) => p.slug === pureSlug)) return pureSlug
     return allProjects.length > 0 ? (allProjects[0].slug ?? null) : null
   })
   const [taskTrees, setTaskTrees] = useState<Record<string, TaskTree | null>>({})
   const [loading, setLoading] = useState<Record<string, boolean>>({})
   const [selectedTask, setSelectedTask] = useState<TaskNode | null>(null)
+  const [pendingTaskId, setPendingTaskId] = useState<string | null>(() => {
+    const hash = window.location.hash.slice(1)
+    const taskMatch = hash.match(/\?task=([^&]+)/)
+    return taskMatch?.[1] ?? null
+  })
 
   const loadTaskTree = useCallback(
     async (slug: string) => {
@@ -134,14 +153,30 @@ export function ProjectsPage() {
   useEffect(() => {
     const onHashChange = () => {
       const hash = window.location.hash.slice(1)
-      if (hash && allProjects.some((p) => p.slug === hash)) {
-        setActiveSlug(hash)
+      const pureSlug = hash.split('?')[0]
+      const taskMatch = hash.match(/\?task=([^&]+)/)
+      if (pureSlug && allProjects.some((p) => p.slug === pureSlug)) {
+        setActiveSlug(pureSlug)
         setSelectedTask(null)
+        if (taskMatch?.[1]) {
+          setPendingTaskId(taskMatch[1])
+        }
       }
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [allProjects])
+
+  // Auto-select task when task tree loads and we have a pending task ID
+  useEffect(() => {
+    if (pendingTaskId && activeTree) {
+      const found = findTaskById(activeTree.tasks, pendingTaskId)
+      if (found) {
+        setSelectedTask(found)
+        setPendingTaskId(null)
+      }
+    }
+  }, [pendingTaskId, activeTree])
 
   const activeProject = allProjects.find((p) => p.slug === activeSlug) ?? null
   const activeColorIdx = allProjects.findIndex((p) => p.slug === activeSlug)
@@ -241,7 +276,7 @@ export function ProjectsPage() {
                 projectSlug={activeProject.slug ?? ''}
               />
             ) : (
-              <ProjectReadme project={activeProject} colorIndex={activeColorIdx} />
+              <ProjectReadme project={activeProject} colorIndex={activeColorIdx} internSlug={internSlug} />
             )}
           </main>
         </div>

@@ -45,13 +45,40 @@ function findRouteForSlug(slug: string): CollectionKey | null {
  * Handles patterns like:
  *   "daily/2026-07-07.md"  -> "/interns/{intern}/daily/2026-07-07"
  *   "2026-07-07"            -> looks up the slug across collections
+ *   "internwiki:project:slug" -> "/interns/{intern}/projects#slug"
+ *   "internwiki:task:project/task-id" -> "/interns/{intern}/projects#project?task=task-id"
  *
- * Note: InternWiki links are intern-scoped, so callers should pass
- * the intern slug separately if needed. For now, this handles
- * bare slug lookups (used in RelatedReports).
+ * @param internSlug - the intern slug for building intern-scoped URLs
  */
-export function internalLinkHref(href: string): string | null {
+export function internalLinkHref(href: string, internSlug?: string): string | null {
   if (!href) return null
+
+  // internwiki: protocol for project/task deep links
+  if (href.startsWith('internwiki:')) {
+    const rest = href.slice('internwiki:'.length)
+
+    // internwiki:project:{slug} -> /interns/{intern}/projects#{slug}
+    if (rest.startsWith('project:')) {
+      const projectSlug = rest.slice('project:'.length)
+      if (!projectSlug) return null
+      const base = internSlug ? `/interns/${internSlug}/projects` : '/projects'
+      return `${base}#${projectSlug}`
+    }
+
+    // internwiki:task:{projectSlug}/{taskId} -> /interns/{intern}/projects#{projectSlug}?task={taskId}
+    if (rest.startsWith('task:')) {
+      const taskRef = rest.slice('task:'.length)
+      const slashIdx = taskRef.indexOf('/')
+      if (slashIdx < 1) return null
+      const projectSlug = taskRef.slice(0, slashIdx)
+      const taskId = taskRef.slice(slashIdx + 1)
+      if (!taskId) return null
+      const base = internSlug ? `/interns/${internSlug}/projects` : '/projects'
+      return `${base}#${projectSlug}?task=${taskId}`
+    }
+
+    return null
+  }
 
   // absolute URLs are never internal
   if (/^[a-z][a-z0-9+.-]*:/i.test(href)) return null
@@ -78,6 +105,29 @@ export function internalLinkHref(href: string): string | null {
   }
 
   return null
+}
+
+/**
+ * Pre-process wiki-style links in markdown body.
+ *
+ * Converts [[project:slug]] and [[task:project-slug/task-id]] syntax
+ * to standard markdown links with internwiki: protocol.
+ *
+ * Supported formats:
+ *   [[project:search-engine]]            -> [search-engine](internwiki:project:search-engine)
+ *   [[project:search-engine|搜索引擎]]    -> [搜索引擎](internwiki:project:search-engine)
+ *   [[task:search-engine/t2-3]]           -> [t2-3](internwiki:task:search-engine/t2-3)
+ *   [[task:search-engine/t2-3|部署ES]]    -> [部署ES](internwiki:task:search-engine/t2-3)
+ */
+export function preprocessWikiLinks(body: string): string {
+  // [[type:ref]] or [[type:ref|display text]]
+  return body.replace(
+    /\[\[(project|task):([^\]|]+)(?:\|([^\]]+))?\]\]/g,
+    (match, type: string, ref: string, display?: string) => {
+      const text = display?.trim() || ref.trim()
+      return `[${text}](internwiki:${type}:${ref.trim()})`
+    },
+  )
 }
 
 /**

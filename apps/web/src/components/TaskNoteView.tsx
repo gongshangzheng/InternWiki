@@ -105,7 +105,7 @@ export function TaskNoteView({
             <p className="mt-1 text-xs text-dim">路径: {task.notePath}</p>
           </div>
         ) : noteContent !== null ? (
-          <MarkdownView body={noteContent} />
+          <MarkdownView body={noteContent} internSlug={internSlug} />
         ) : (
           <></>
         )

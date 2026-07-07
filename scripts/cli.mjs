@@ -12,12 +12,13 @@
  *   pnpm cli task move   --intern alice --project search-engine --id t2-2 --parent t3
  */
 
-import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const CONTENT_ROOT = resolve(__dirname, '..', 'apps', 'web', 'content', 'interns')
+const CONTENT_ROOT = resolve(__dirname, '..', 'apps', 'web', 'content')
+const INTERN_ROOT = resolve(CONTENT_ROOT, 'interns')
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ function parseArgs(argv) {
 }
 
 function getTasksPath(intern, project) {
-  return resolve(CONTENT_ROOT, intern, 'projects', project, 'tasks.json')
+  return resolve(INTERN_ROOT, intern, 'projects', project, 'tasks.json')
 }
 
 function loadTasks(intern, project) {
@@ -133,7 +134,7 @@ function countTasks(tasks) {
 }
 
 function findInternProjects(intern) {
-  const internDir = resolve(CONTENT_ROOT, intern)
+  const internDir = resolve(INTERN_ROOT, intern)
   if (!existsSync(internDir)) return []
   const projectsDir = resolve(internDir, 'projects')
   if (!existsSync(projectsDir)) return []
@@ -359,12 +360,342 @@ function cmdMove(args) {
   console.log(`  Moved: ${id} → ${parent || 'root'}`)
 }
 
+// ── Content management commands ─────────────────────────────
+
+function getIsoWeek(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const dayNum = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`
+}
+
+function cmdNewIntern(args) {
+  const name = args.name
+  const slug = args.slug
+  const team = args.team || '未分组'
+  const role = args.role || '实习生'
+  const startDate = args['start-date'] || args.startDate || new Date().toISOString().slice(0, 10)
+
+  if (!name || !slug) {
+    console.error('✗ --name and --slug are required')
+    console.error('  pnpm cli new-intern --name 张三 --slug zhangsan --team 后端组 --role 后端开发实习生 --start-date 2026-07-01')
+    process.exit(1)
+  }
+
+  const internDir = resolve(INTERN_ROOT, slug)
+  if (existsSync(resolve(internDir, 'profile.md'))) {
+    console.error(`✗ Intern already exists: ${slug}`)
+    process.exit(1)
+  }
+
+  mkdirSync(resolve(internDir, 'daily'), { recursive: true })
+  mkdirSync(resolve(internDir, 'weekly'), { recursive: true })
+  mkdirSync(resolve(internDir, 'monthly'), { recursive: true })
+  mkdirSync(resolve(internDir, 'docs'), { recursive: true })
+  mkdirSync(resolve(internDir, 'projects'), { recursive: true })
+
+  const profile = `---
+name: ${name}
+slug: ${slug}
+team: ${team}
+role: ${role}
+startDate: ${startDate}
+---
+
+## 自我介绍
+
+${name}，${role}。
+
+## 技术栈
+
+- **语言**: 
+- **框架**: 
+- **工具**: 
+
+## 联系方式
+
+- GitHub: 
+- Email: 
+`
+  writeFileSync(resolve(internDir, 'profile.md'), profile)
+  console.log(`✓ Created intern: ${name} (${slug})`)
+  console.log(`  → ${internDir}`)
+  console.log('  Run pnpm content:build to compile.')
+}
+
+function cmdNewReport(args) {
+  const intern = args.intern
+  const type = args.type
+  let date = args.date
+
+  if (!intern || !type) {
+    console.error('✗ --intern and --type are required')
+    console.error('  pnpm cli new-report --intern alice --type daily [--date 2026-07-07]')
+    console.error('  pnpm cli new-report --intern alice --type weekly [--week 2026-W28]')
+    console.error('  pnpm cli new-report --intern alice --type monthly [--month 2026-07]')
+    process.exit(1)
+  }
+
+  const validTypes = ['daily', 'weekly', 'monthly']
+  if (!validTypes.includes(type)) {
+    console.error(`✗ Invalid type: ${type}. Must be one of: ${validTypes.join(', ')}`)
+    process.exit(1)
+  }
+
+  const now = new Date()
+  let slug, title, dateStr, weekday
+
+  if (type === 'daily') {
+    const d = date ? new Date(date) : now
+    dateStr = d.toISOString().slice(0, 10)
+    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+    weekday = weekdays[d.getDay()]
+    slug = dateStr
+    title = `日报 - ${dateStr} ${weekday}`
+  } else if (type === 'weekly') {
+    slug = args.week || getIsoWeek(now)
+    dateStr = now.toISOString().slice(0, 10)
+    title = `周报 - ${slug}`
+  } else if (type === 'monthly') {
+    slug = args.month || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    dateStr = now.toISOString().slice(0, 10)
+    title = `月报 - ${slug}`
+  }
+
+  const dir = resolve(INTERN_ROOT, intern, type)
+  const filepath = resolve(dir, `${slug}.md`)
+
+  if (existsSync(filepath)) {
+    console.error(`✗ Report already exists: ${filepath}`)
+    process.exit(1)
+  }
+
+  mkdirSync(dir, { recursive: true })
+
+  const content = type === 'daily'
+    ? `---
+title: ${title}
+slug: ${slug}
+date: ${dateStr}
+summary: 
+tags: []
+---
+
+## 今日完成
+
+- 
+
+## 进行中
+
+- 
+
+## 阻塞项
+
+- 无
+
+## 笔记
+
+## 习惯打卡
+
+- [ ] 晨会 #routine
+`
+    : type === 'weekly'
+    ? `---
+title: ${title}
+slug: ${slug}
+date: ${dateStr}
+summary: 
+tags: [周报]
+---
+
+## 本周总结
+
+
+## 关键成果
+
+- 
+
+## 数据
+
+- PR 合并: 0
+- 代码审查: 0
+- Bug 修复: 0
+- 文档撰写: 0
+
+## 下周计划
+
+- 
+
+## 反思
+
+`
+    : `---
+title: ${title}
+slug: ${slug}
+date: ${dateStr}
+summary: 
+tags: [月报]
+---
+
+## 月度概览
+
+
+## 重要成果
+
+- 
+
+## 月度数据
+
+- 工作日: 0
+- PR 合并: 0
+- 代码审查: 0
+- Bug 修复: 0
+- 文档产出: 0
+
+## 成长复盘
+
+### 技术成长
+
+### 协作成长
+
+## 下月计划
+
+- 
+`
+
+  writeFileSync(filepath, content)
+  console.log(`✓ Created ${type} report: ${title}`)
+  console.log(`  → ${filepath}`)
+  console.log('  Run pnpm content:build to compile.')
+}
+
+function cmdNewDoc(args) {
+  const intern = args.intern
+  const title = args.title
+  const slug = args.slug || title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30)
+
+  if (!intern || !title) {
+    console.error('✗ --intern and --title are required')
+    console.error('  pnpm cli new-doc --intern alice --title "Redis 缓存指南" [--slug redis-guide]')
+    process.exit(1)
+  }
+
+  if (!slug) {
+    console.error('✗ Could not generate slug from title. Provide --slug manually.')
+    process.exit(1)
+  }
+
+  const dir = resolve(INTERN_ROOT, intern, 'docs')
+  const filepath = resolve(dir, `${slug}.md`)
+
+  if (existsSync(filepath)) {
+    console.error(`✗ Doc already exists: ${filepath}`)
+    process.exit(1)
+  }
+
+  mkdirSync(dir, { recursive: true })
+
+  const date = new Date().toISOString().slice(0, 10)
+  const content = `---
+title: ${title}
+slug: ${slug}
+date: ${date}
+summary: 
+tags: []
+---
+
+## 背景
+
+
+## 正文
+
+`
+
+  writeFileSync(filepath, content)
+  console.log(`✓ Created doc: ${title}`)
+  console.log(`  → ${filepath}`)
+  console.log('  Run pnpm content:build to compile.')
+}
+
+function cmdNewProject(args) {
+  const intern = args.intern
+  const slug = args.slug
+  const title = args.title
+  const summary = args.summary || ''
+  const category = args.category || 'work'
+  const startDate = args['start-date'] || args.startDate || new Date().toISOString().slice(0, 10)
+
+  if (!intern || !slug || !title) {
+    console.error('✗ --intern, --slug, and --title are required')
+    console.error('  pnpm cli new-project --intern alice --slug search-engine --title "搜索引擎" --summary "..."')
+    process.exit(1)
+  }
+
+  const projectDir = resolve(INTERN_ROOT, intern, 'projects', slug)
+  if (existsSync(resolve(projectDir, 'README.md'))) {
+    console.error(`✗ Project already exists: ${slug}`)
+    process.exit(1)
+  }
+
+  mkdirSync(projectDir, { recursive: true })
+  mkdirSync(resolve(projectDir, 'notes'), { recursive: true })
+
+  const readme = `---
+title: ${title}
+slug: ${slug}
+status: active
+startDate: ${startDate}
+endDate: null
+category: ${category}
+tags: []
+summary: ${summary}
+timeline:
+  - date: ${startDate}
+    title: 项目立项
+    type: milestone
+    description: 项目启动
+---
+
+## 项目背景
+
+${summary}
+
+## 技术方案
+
+- 
+
+## 当前阶段
+
+项目启动中。
+`
+  writeFileSync(resolve(projectDir, 'README.md'), readme)
+
+  const tasks = {
+    project: slug,
+    intern: intern,
+    tasks: [],
+  }
+  writeFileSync(resolve(projectDir, 'tasks.json'), JSON.stringify(tasks, null, 2) + '\n')
+
+  console.log(`✓ Created project: ${title} (${slug})`)
+  console.log(`  → ${projectDir}`)
+  console.log('  Run pnpm content:build to compile.')
+}
+
 // ── Main ─────────────────────────────────────────────────────
 
 const HELP = `
-InternWiki CLI — task management
+InternWiki CLI
 
-Usage:
+Content management:
+  pnpm cli new-intern   --name 张三 --slug zhangsan [--team 后端组] [--role 实习生] [--start-date 2026-07-01]
+  pnpm cli new-report   --intern <slug> --type daily|weekly|monthly [--date YYYY-MM-DD] [--week YYYY-Wxx] [--month YYYY-MM]
+  pnpm cli new-doc       --intern <slug> --title "标题" [--slug custom-slug]
+  pnpm cli new-project   --intern <slug> --slug project-slug --title "项目名" [--summary "..."] [--category work]
+
+Task management:
   pnpm cli task add     --intern <name> --project <slug> --title "..." [--parent <id>] [--status planned] [--assignee <name>] [--description "..."] [--notePath notes/x.md] [--startDate YYYY-MM-DD] [--tags a,b,c]
   pnpm cli task done    --intern <name> --project <slug> --id <task-id>
   pnpm cli task remove  --intern <name> --project <slug> --id <task-id>
@@ -373,10 +704,14 @@ Usage:
   pnpm cli task stats   --intern <name>
 
 Examples:
-  pnpm cli task add    --intern alice --project search-engine --title "添加测试" --parent t2
-  pnpm cli task done   --intern alice --project search-engine --id t2-2
-  pnpm cli task list   --intern alice --project search-engine
-  pnpm cli task stats  --intern alice
+  pnpm cli new-intern   --name 张三 --slug zhangsan --team 后端组
+  pnpm cli new-report   --intern alice --type daily
+  pnpm cli new-doc      --intern alice --title "Redis 缓存指南"
+  pnpm cli new-project  --intern alice --slug search-engine --title "搜索引擎"
+  pnpm cli task add     --intern alice --project search-engine --title "添加测试" --parent t2
+  pnpm cli task done    --intern alice --project search-engine --id t2-2
+  pnpm cli task list    --intern alice --project search-engine
+  pnpm cli task stats   --intern alice
 `
 
 const { args, positional } = parseArgs(process.argv)
@@ -387,9 +722,17 @@ if (positional.length === 0 || positional[0] === 'help' || args.help) {
 }
 
 const command = positional[0]
-const subcommand = positional[1]
 
-if (command === 'task') {
+if (command === 'new-intern') {
+  cmdNewIntern(args)
+} else if (command === 'new-report') {
+  cmdNewReport(args)
+} else if (command === 'new-doc') {
+  cmdNewDoc(args)
+} else if (command === 'new-project') {
+  cmdNewProject(args)
+} else if (command === 'task') {
+  const subcommand = positional[1]
   switch (subcommand) {
     case 'add':
       cmdAdd(args)

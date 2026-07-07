@@ -1,8 +1,9 @@
 import { Routes, Route, NavLink, Link, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
-import { Sun, Moon } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Sun, Moon, Search } from 'lucide-react'
 import { getAllInterns } from '@/content/loader'
 import { useTheme } from '@/hooks/useTheme'
+import { SearchModal } from '@/components/SearchModal'
 import { Home } from '@/pages/Home'
 import { InternHome } from '@/pages/InternHome'
 import {
@@ -36,7 +37,7 @@ function ThemeToggle() {
   )
 }
 
-function NavBar() {
+function NavBar({ onSearchOpen }: { onSearchOpen: () => void }) {
   const allInterns = getAllInterns()
   const location = useLocation()
 
@@ -80,6 +81,13 @@ function NavBar() {
         )}
 
         <div className="ml-auto flex items-center gap-1">
+          <button
+            onClick={onSearchOpen}
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-dim transition-colors hover:bg-muted hover:text-heading"
+          >
+            <Search className="h-3.5 w-3.5" />
+            搜索
+          </button>
           <Link to="/calendar" className="rounded-md px-2.5 py-1 text-xs font-medium text-dim transition-colors hover:text-heading">日历</Link>
           <ThemeToggle />
           <span className="text-[10px] uppercase tracking-widest text-placeholder">v0.1</span>
@@ -123,13 +131,28 @@ function SubNav({ to, label, end }: { to: string; label: string; end?: boolean }
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  // Cmd/Ctrl + K to open search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <NavBar />
+      <NavBar onSearchOpen={() => setSearchOpen(true)} />
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">{children}</main>
       <footer className="lo-footer">
         InternWiki — 实习生之间相互分享工作成果
       </footer>
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   )
 }

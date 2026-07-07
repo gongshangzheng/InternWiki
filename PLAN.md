@@ -46,43 +46,54 @@ InternWiki/
 │       │   │       ├── weekly/          # 周报 YYYY-Www.md
 │       │   │       ├── monthly/         # 月报 YYYY-MM.md
 │       │   │       ├── docs/            # 知识库文档 *.md
-│       │   │       └── projects/        # 项目（每个含 README.md + tasks.json）
+│       │   │       └── projects/        # 项目（每个含 README.md + tasks.json + notes/）
 │       │   │           └── {slug}/
 │       │   │               ├── README.md
-│       │   │               └── tasks.json
+│       │   │               ├── tasks.json
+│       │   │               └── notes/      # 任务笔记（Markdown，notePath 引用）
 │       │   └── site.yml           # 站点配置（标题、导航、实习生列表）
 │       ├── src/
 │       │   ├── main.tsx           # 入口
 │       │   ├── App.tsx           # 路由 + 布局
-│       │   ├── index.css         # Tailwind 入口
+│       │   ├── index.css         # Tailwind 入口（@import styles/*）
+│       │   ├── styles/            # 模块化 CSS（对齐 lifeOS）
+│       │   │   ├── variables.css   # 设计令牌（颜色/圆角，亮/暗双主题）
+│       │   │   ├── base.css        # 重置 + 基础排版
+│       │   │   ├── components.css   # .lo-card / .lo-nav / .lo-footer 等
+│       │   │   ├── markdown.css     # .md-body 排版（标题/列表/代码块）
+│       │   │   ├── calendar.css     # FullCalendar 主题覆写
+│       │   │   └── utilities.css    # 工具类
 │       │   ├── content/
 │       │   │   ├── schema.ts     # Zod 运行时 schema（与 Velite 同步）
-│       │   │   ├── loader.ts     # 数据加载器（getAll/getBySlug）
+│       │   │   ├── loader.ts     # 数据加载器（getAll/getBySlug + async task fetch）
 │       │   │   └── .velite/      # Velite 生成（gitignore）
 │       │   ├── pages/
 │       │   │   ├── Home.tsx              # 首页：实习生目录 + 全站概览
 │       │   │   ├── InternHome.tsx       # 实习生仪表盘
 │       │   │   ├── ReportPages.tsx      # 报告列表/详情（日/周/月/文档 通用）
-│       │   │   ├── Projects.tsx         # 任务树页
+│       │   │   ├── Projects.tsx         # 项目页（Tabs + 左右布局：Git 树 + README/笔记）
 │       │   │   ├── Calendar.tsx        # 日历页（实习生选择 + 日程视图）
 │       │   │   └── Habits.tsx           # 习惯追踪页
 │       │   ├── components/
-│       │   │   ├── MarkdownView.tsx     # Markdown 渲染
+│       │   │   ├── MarkdownView.tsx     # Markdown 渲染（react-markdown + remark-gfm + rehype-raw）
 │       │   │   ├── ReportList.tsx       # 报告列表
 │       │   │   ├── ReportDetail.tsx     # 报告详情
 │       │   │   ├── RelatedReports.tsx   # 上下层/相邻报告链接
-│       │   │   ├── TaskTree.tsx         # Git 风格任务树
+│       │   │   ├── TaskTreeNode.tsx    # Git 风格任务树节点（分支线 + hover tooltip）
+│       │   │   ├── ProjectTabs.tsx      # 项目切换 Tabs（pill 样式 + 状态图标）
 │       │   │   ├── Heatmap.tsx          # 贡献热力图
 │       │   │   ├── InternSelect.tsx     # 实习生选择器（日历等页面共用）
 │       │   │   ├── SearchModal.tsx      # 搜索弹窗
 │       │   │   └── ThemeToggle.tsx      # 暗/亮模式
 │       │   ├── lib/
-│       │   │   └── utils.ts            # cn() 等工具
+│       │   │   ├── utils.ts            # cn() 等工具
+│       │   │   └── markdown.ts         # internalLinkHref() + stripMarkdown()
 │       │   └── hooks/
+│       │       ├── useTheme.ts         # 主题 hook（localStorage + 系统偏好）
 │       │       └── useHabits.ts        # 习惯数据提取
 │       ├── public/               # 静态资源（favicon 等）
 │       ├── velite.config.ts      # Velite 内容 schema + collections
-│       ├── vite.config.ts        # Vite 配置（base 路径、React 插件）
+│       ├── vite.config.ts        # Vite 配置（base 路径、React 插件、projectTasksPlugin）
 │       ├── tsconfig.json
 │       └── eslint.config.js
 ├── scripts/
@@ -190,7 +201,7 @@ export default defineConfig({
 })
 ```
 
-> 任务树 `tasks.json` 不走 Velite（Velite 主要处理 Markdown），改为构建脚本扫描收集，或用 Vite 的 `import.meta.glob` 在客户端直接导入。详见 3.1。
+> 任务树 `tasks.json` 不走 Velite（Velite 主要处理 Markdown），改为 **Vite 插件** `projectTasksPlugin` 在 dev 中间件中按 `{base}/{intern}/{slug}.tasks.json` 路径 serve，生产构建时复制到 `dist/`。客户端通过 `fetch` 异步加载。详见 3.1。
 
 ### 1.5 关键依赖
 
@@ -360,13 +371,28 @@ startDate: 2026-06-01
 ```
 content/interns/{name}/projects/{slug}/
 ├── README.md     # 项目说明（frontmatter: title/status/startDate/tags/timeline）
-└── tasks.json    # 任务树数据
+├── tasks.json    # 任务树数据
+└── notes/        # 任务笔记（Markdown，notePath 引用，如 notes/task-detail.md）
 ```
 
-**加载方式**（二选一，推荐 A）：
+**加载方式：Vite 插件 `projectTasksPlugin`**（对齐 lifeOS）
 
-- **A. 构建脚本收集**：`scripts/collect-tasks.mjs` 扫描所有 `tasks.json`，输出 `public/tasks-index.json`，客户端 `fetch` 加载（与 lifeOS dist 中的 `*.tasks.json` 一致）。
-- **B. Vite glob 导入**：`import.meta.glob('/content/interns/*/projects/*/tasks.json', { eager: true })`，构建时内联。
+参考 lifeOS 的 `vite.config.ts` 中的 `projectTasksPlugin()`：
+
+- **Dev**：Vite 中间件拦截 `/{base}/interns/{name}/{slug}.tasks.json` 请求，从 `content/interns/{name}/projects/{slug}/tasks.json` 读取并返回
+- **Dev**：同时拦截 `/{base}/interns/{name}/{slug}/{notePath}` 请求，serve 任务笔记 Markdown
+- **Build**：`closeBundle` 钩子将所有 `tasks.json` 复制到 `dist/` 下对应路径
+- **客户端**：`getProjectTasks(intern, slug)` 返回 `Promise<TaskTree | null>`，通过 `fetch` 异步加载
+
+```ts
+// loader.ts
+export async function getProjectTasks(internSlug: string, projectSlug: string): Promise<TaskTree | null> {
+  const res = await fetch(`/InternWiki/interns/${internSlug}/${projectSlug}.tasks.json`)
+  if (!res.ok) return null
+  const tree: TaskTree = await res.json()
+  return { ...tree, tasks: cascadeStatus(tree.tasks) }
+}
+```
 
 ### 3.2 tasks.json 结构
 
@@ -375,39 +401,91 @@ content/interns/{name}/projects/{slug}/
   "project": "search-engine",
   "intern": "alice",
   "tasks": [
-    { "id": "t1", "title": "设计索引 Schema", "status": "completed", "startDate": "2026-06-01", "endDate": "2026-06-05", "description": "", "children": [] },
+    { "id": "t1", "title": "设计索引 Schema", "status": "completed", "assignee": "alice", "startDate": "2026-06-01", "endDate": "2026-06-05", "description": "", "notePath": "notes/schema-design.md", "tags": ["后端"], "children": [] },
     {
       "id": "t2",
       "title": "实现爬虫",
       "status": "active",
+      "assignee": "alice",
       "startDate": "2026-06-06",
       "endDate": null,
       "description": "URL 队列 + HTML 解析",
       "children": [
         { "id": "t2-1", "title": "URL 队列", "status": "completed", "startDate": null, "endDate": null, "description": "", "children": [] },
-        { "id": "t2-2", "title": "HTML 解析器", "status": "active", "startDate": null, "endDate": null, "description": "", "children": [] },
-        { "id": "t2-3", "title": "Robots.txt 遵守", "status": "planned", "startDate": null, "endDate": null, "description": "", "children": [] }
+        { "id": "t2-2", "title": "HTML 解析器", "status": "active", "startDate": null, "endDate": null, "description": "", "notePath": "notes/html-parser.md", "children": [] },
+        { "id": "t2-3", "title": "Robots.txt 遵守", "status": "blocked", "startDate": null, "endDate": null, "description": "", "children": [] }
       ]
     },
-    { "id": "r-1", "title": "每日代码提交", "status": "active", "description": "", "recurring": { "pattern": "daily", "startTime": "21:00", "endTime": "21:30", "activeFrom": "2026-07-07", "excludeDates": [] }, "children": [] }
+    { "id": "r-1", "title": "每日代码提交", "status": "active", "description": "", "recurring": { "pattern": "daily", "startTime": "21:00", "endTime": "21:30", "activeFrom": "2026-07-07", "excludeDates": [], "reportLevels": ["daily"] }, "tags": ["routine"], "children": [] }
   ]
 }
 ```
 
-**任务状态**：`planned` / `active` / `completed` / `paused`
+**任务状态**：`planned` / `active` / `completed` / `paused` / `blocked`
 **递归层级**：`children[]` 任意深度
-**周期任务**：`recurring` 字段（daily/weekly），可展开为日历事件
-**阻塞关系**（可选）：`blockedBy: ["t2"]`
+**周期任务**：`recurring` 字段（daily/weekly/every-N-days），`reportLevels` 指定出现在哪些报告中，可展开为日历事件
+**任务字段**（对齐 lifeOS 最新 TaskNode）：
 
-### 3.3 任务树引擎 (`components/TaskTree.tsx`)
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `assignee` | string? | 执行人（显示在任务行和 tooltip 中） |
+| `notePath` | string? | 任务笔记路径（相对项目目录，如 `notes/detail.md`），点击任务在右侧面板渲染笔记 |
+| `tags` | string[]? | 习惯标签（如 `["routine", "growth"]`），用于习惯追踪 |
+| `startTime` / `endTime` | string? | 一次性定时任务的时间（HH:MM），用于日历时间轴视图 |
+| `location` | string? | 地点，日历事件显示 |
+| `category` | string? | 日历着色分类（study/health/work/social/life/other） |
+| `blockedBy` | string[]? | 阻塞关系（可选） |
 
-参考 lifeOS 的 Git 风格任务树：
-- 递归渲染，可展开/折叠，URL hash 持久化展开态（Zustand）
-- 状态图标：⚪ planned / 🔵 active / ✅ completed / ⏸ paused
-- **级联完成**：子任务全部 completed → 父任务自动标记 completed
-- **状态统计**：完成数 / 总数 / 百分比（进度条）
-- 任务详情面板：点击任务显示 description、时间区间、阻塞关系
-- 多项目聚合：实习生仪表盘聚合该实习生所有项目的任务树
+### 3.3 任务树引擎 (`components/TaskTreeNode.tsx` + `pages/Projects.tsx`)
+
+参考 lifeOS 最新 `Projects.tsx`（633 行）的 Git 风格任务树实现：
+
+**页面架构**（单页 + URL hash，非路由式）：
+```
+┌─────────────────────────────────────────────┐
+│ [ProjectA] [ProjectB] [ProjectC]  ← Tabs   │
+├──────────────┬──────────────────────────────┤
+│ 左侧 280px    │ 右侧 1fr                     │
+│              │                              │
+│ Git 风格      │ 点击任务前: ProjectREADME     │
+│ 任务树        │ 点击任务后: TaskNoteView     │
+│ (递归分支线)  │ (fetch notePath 渲染 Markdown)│
+│              │                              │
+│ ● t1 完成     │ ## 项目说明                  │
+│ ├─ t1-1      │ ...                          │
+│ ├─ t1-2      │                              │
+│ ◉ t2 进行中   │ ---                          │
+│ │  ├─ t2-1   │ ## 任务笔记                  │
+│ │  ├─ t2-2 ← │ (点击的任务笔记)              │
+│ │  └─ t2-3   │                              │
+│ ⏸ t3 暂停     │                              │
+└──────────────┴──────────────────────────────┘
+```
+
+**TaskTreeNode 组件**：
+- **Git 分支线**：`parentLines: boolean[]` 数组控制每一层是否画竖线，`isLast` 控制最后一个子任务的拐角
+- **状态圆点**：`planned`(灰) / `active`(绿) / `completed`(蓝+透明) / `paused`(琥珀) / `blocked`(红)，带 `ring-2` 外圈
+- **展开/折叠**：`useState(depth < 1)` 默认展开第一层，ChevronRight/Down 图标
+- **子任务计数**：有子任务时显示 `completed/total`
+- **Hover tooltip**（400ms 延迟）：显示状态、执行人、时间、地点、描述、子任务进度条
+- **选中态**：点击任务 → 右侧面板切换为 `TaskNoteView`，`selectedId` 高亮当前行
+- **assignee**：右侧显示头像+名字 pill
+- **startTime**：显示时钟图标+时间
+- **notePath**：显示文件图标，提示可点击查看笔记
+
+**TaskNoteView 组件**：
+- 点击有 `notePath` 的任务时，`fetch` 加载 Markdown 笔记并用 `react-markdown` 渲染
+- 无 `notePath` 时显示 `description` 纯文本
+- 无两者时显示"该任务暂无描述或笔记"
+
+**ProjectTabs 组件**：
+- pill 样式标签页，按项目颜色着色（emerald/blue/amber/violet/pink/cyan 循环）
+- 切换时更新 URL hash（`#search-engine`）并加载对应 tasks.json
+- 状态图标：GitBranch(active) / CheckCircle2(completed) / Pause(paused) / Circle(planned)
+
+**级联完成**：`cascadeStatus()` 递归处理，子任务全部 completed → 父任务自动标记 completed
+
+**多项目聚合**：实习生仪表盘聚合该实习生所有项目的任务树统计
 
 ### 3.4 CLI 任务管理 (`scripts/cli.mjs`)
 
@@ -440,8 +518,7 @@ pnpm cli task stats  --intern alice          # 聚合所有项目统计
 /interns/:name/monthly/:slug       月报详情
 /interns/:name/docs                文档列表
 /interns/:name/docs/:slug          文档详情
-/interns/:name/projects            项目/任务树总览
-/interns/:name/projects/:slug      单项目任务树
+/interns/:name/projects            项目页（Tabs + 左右布局，URL hash 切换项目）
 /shared                            团队共享文档
 ```
 

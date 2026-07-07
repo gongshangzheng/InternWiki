@@ -45,7 +45,8 @@ pnpm setting set-default --intern alice
 
 1. **在自己的分支上工作**：`intern-你的名字`
 2. 定期从 main 拉取最新代码，避免冲突
-3. 内容稳定后可以提 PR 合并到 main
+3. 内容稳定后合并到 main，push 到 main 自动触发 GitHub Pages 部署
+4. `base` 分支保存基础样式快照，作为参考基线，不用于日常开发或部署
 
 ### 提交信息规范
 

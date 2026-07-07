@@ -227,6 +227,13 @@ body {
 
 /* ── Calendar overrides ─────────────────────────────────────── */
 
+.lo-calendar {
+  --fc-border-color: var(--color-border);
+  --fc-page-bg-color: var(--color-card);
+  --fc-neutral-bg-color: var(--color-muted);
+  --fc-neutral-text-color: var(--color-dim);
+  --fc-non-business-color: color-mix(in srgb, var(--color-muted) 60%, transparent);
+}
 .lo-calendar .fc-toolbar-title { font-size: 1.125rem; font-weight: 600; }
 .lo-calendar .fc-button { background: var(--color-card) !important; border-color: var(--color-border) !important; color: var(--color-body) !important; }
 .lo-calendar .fc-button:hover { background: var(--color-muted) !important; }

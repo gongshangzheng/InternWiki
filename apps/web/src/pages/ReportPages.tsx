@@ -1,13 +1,19 @@
-import { useParams, Link, Navigate } from 'react-router-dom'
+import { useParams, Navigate } from 'react-router-dom'
+import { ReportList, type ReportListItem } from '@/components/ReportList'
+import { ReportDetail, type ReportDetailItem } from '@/components/ReportDetail'
 import { getInternBySlug, getInternReports } from '@/content/loader'
 import type { Daily, Weekly, Monthly, Docs } from '@/content/loader'
-import { MarkdownView } from '@/components/MarkdownView'
 
 type CollectionKey = 'daily' | 'weekly' | 'monthly' | 'docs'
 
 const COLLECTION_CONFIG: Record<
   CollectionKey,
-  { label: string; description: string; basePath: (intern: string) => string; empty: string }
+  {
+    label: string
+    description: string
+    basePath: (intern: string) => string
+    empty: string
+  }
 > = {
   daily: {
     label: '日报',
@@ -35,14 +41,11 @@ const COLLECTION_CONFIG: Record<
   },
 }
 
-type ReportItem = {
-  slug: string
-  title: string
-  date?: string
-  summary?: string
-  body: string
-  tags?: string[]
-  intern: string
+function getTags(item: Daily | Weekly | Monthly | Docs): string[] {
+  if ('tags' in item && Array.isArray(item.tags)) {
+    return item.tags as string[]
+  }
+  return []
 }
 
 /** Report list page — generic for daily/weekly/monthly/docs */
@@ -53,57 +56,27 @@ export function ReportListPage({ type }: { type: CollectionKey }) {
 
   if (!intern) return <Navigate to="/" replace />
 
-  const reports = getInternReports(intern.slug ?? '')
-  const items: ReportItem[] = (reports[type] as Array<Daily | Weekly | Monthly | Docs>).map((r) => ({
+  const internSlug = intern.slug ?? ''
+  const reports = getInternReports(internSlug)
+  const collection = reports[type] as Array<Daily | Weekly | Monthly | Docs>
+
+  const items: ReportListItem[] = collection.map((r) => ({
     slug: r.slug,
     title: r.title,
     date: r.date,
     summary: r.summary,
-    body: r.body,
-    tags: 'tags' in r ? (r.tags as string[]) : [],
-    intern: r.intern,
+    tags: getTags(r),
+    intern: internSlug,
   }))
 
   return (
-    <section className="space-y-4">
-      <div>
-        <Link to={`/interns/${intern.slug}`} className="text-xs text-dim hover:text-heading">
-          ← {intern.name}
-        </Link>
-        <h1 className="lo-section-title mt-1">{cfg.label}列表</h1>
-        <p className="text-xs text-dim">{cfg.description}</p>
-      </div>
-
-      {items.length === 0 ? (
-        <p className="py-8 text-center text-sm text-dim">{cfg.empty}</p>
-      ) : (
-        <div className="space-y-2">
-          {items.map((item) => (
-            <Link
-              key={item.slug}
-              to={`${cfg.basePath(intern.slug ?? '')}/${item.slug}`}
-              className="lo-card block p-3 transition-colors hover:border-primary/40"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="flex-1 truncate text-sm font-medium text-heading">
-                  {item.summary ?? item.title}
-                </span>
-                {item.date && <span className="text-xs text-dim">{item.date}</span>}
-              </div>
-              {item.tags && item.tags.length > 0 && (
-                <div className="mt-1 flex gap-1">
-                  {item.tags.slice(0, 5).map((tag) => (
-                    <span key={tag} className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-dim">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </Link>
-          ))}
-        </div>
-      )}
-    </section>
+    <ReportList
+      title={cfg.label}
+      description={cfg.description}
+      items={items}
+      basePath={cfg.basePath(internSlug)}
+      emptyText={cfg.empty}
+    />
   )
 }
 
@@ -115,38 +88,29 @@ export function ReportDetailPage({ type }: { type: CollectionKey }) {
 
   if (!intern) return <Navigate to="/" replace />
 
-  const reports = getInternReports(intern.slug ?? '')
+  const internSlug = intern.slug ?? ''
+  const reports = getInternReports(internSlug)
   const collection = reports[type] as Array<Daily | Weekly | Monthly | Docs>
-  const item = collection.find((r) => r.slug === slug)
+  const raw = collection.find((r) => r.slug === slug)
 
-  if (!item) {
-    return (
-      <div className="py-16 text-center">
-        <p className="text-sm text-dim">未找到: {slug}</p>
-        <Link to={cfg.basePath(intern.slug ?? '')} className="mt-2 inline-block text-xs text-primary hover:underline">
-          返回{cfg.label}列表
-        </Link>
-      </div>
-    )
-  }
+  const item: ReportDetailItem | undefined = raw
+    ? {
+        title: raw.title,
+        slug: raw.slug,
+        date: raw.date,
+        summary: raw.summary,
+        body: raw.body,
+        tags: getTags(raw),
+      }
+    : undefined
 
   return (
-    <section className="space-y-4">
-      <div>
-        <Link to={cfg.basePath(intern.slug ?? '')} className="text-xs text-dim hover:text-heading">
-          ← {cfg.label}列表
-        </Link>
-        <h1 className="lo-section-title mt-1">{item.title}</h1>
-        <div className="flex items-center gap-3 text-xs text-dim">
-          {item.date && <span>{item.date}</span>}
-          {'tags' in item && item.tags && item.tags.length > 0 && (
-            <span>{item.tags.join(', ')}</span>
-          )}
-        </div>
-      </div>
-
-      <MarkdownView content={item.body} />
-    </section>
+    <ReportDetail
+      item={item}
+      backTo={cfg.basePath(internSlug)}
+      backLabel={`${cfg.label}列表`}
+      notFoundTitle={`未找到${cfg.label}`}
+    />
   )
 }
 

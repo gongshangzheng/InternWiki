@@ -140,7 +140,7 @@ export function ProjectDetailPage() {
       )}
 
       {/* Project body */}
-      <MarkdownView content={project.body} />
+      <MarkdownView body={project.body} />
     </section>
   )
 }

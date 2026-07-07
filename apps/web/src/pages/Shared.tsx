@@ -73,7 +73,7 @@ export function SharedDetail() {
         </div>
       </div>
 
-      <MarkdownView content={item.body} />
+      <MarkdownView body={item.body} />
     </section>
   )
 }

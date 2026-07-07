@@ -39,7 +39,7 @@ export function InternHome() {
       {/* Bio */}
       {intern.body && (
         <div className="lo-card p-4">
-          <MarkdownView content={intern.body} />
+          <MarkdownView body={intern.body} />
         </div>
       )}
 

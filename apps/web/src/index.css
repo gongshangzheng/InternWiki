@@ -7,6 +7,25 @@
 @theme {
   --font-sans: "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+
+  /* Map CSS variables to Tailwind color utilities (bg-card, text-heading, etc.) */
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-card: var(--color-card);
+  --color-card-foreground: var(--color-card-foreground);
+  --color-muted: var(--color-muted);
+  --color-muted-foreground: var(--color-muted-foreground);
+  --color-border: var(--color-border);
+  --color-border-subtle: var(--color-border);
+  --color-input: var(--color-input);
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-primary-subtle: var(--color-primary-subtle);
+  --color-primary-subtle-foreground: var(--color-primary-subtle-foreground);
+  --color-heading: var(--color-heading);
+  --color-body: var(--color-body);
+  --color-dim: var(--color-dim);
+  --color-placeholder: var(--color-placeholder);
 }
 
 /* ── Theme variables ─────────────────────────────────────────── */

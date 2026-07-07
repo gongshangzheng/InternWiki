@@ -1,6 +1,8 @@
 import { Routes, Route, NavLink, Link, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
+import { Sun, Moon } from 'lucide-react'
 import { getAllInterns } from '@/content/loader'
+import { useTheme } from '@/hooks/useTheme'
 import { Home } from '@/pages/Home'
 import { InternHome } from '@/pages/InternHome'
 import {
@@ -17,6 +19,20 @@ import { ProjectsPage } from '@/pages/Projects'
 import { SharedList, SharedDetail } from '@/pages/Shared'
 
 // ── Layout ──────────────────────────────────────────────────
+
+function ThemeToggle() {
+  const { theme, toggle } = useTheme()
+  return (
+    <button
+      onClick={toggle}
+      className="rounded-md p-1.5 text-dim transition-colors hover:bg-muted hover:text-heading"
+      aria-label={theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'}
+      title={theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'}
+    >
+      {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
+  )
+}
 
 function NavBar() {
   const allInterns = getAllInterns()
@@ -61,9 +77,10 @@ function NavBar() {
           </div>
         )}
 
-        <span className="ml-auto text-[10px] uppercase tracking-widest text-placeholder">
-          v0.1
-        </span>
+        <div className="ml-auto flex items-center gap-1">
+          <ThemeToggle />
+          <span className="text-[10px] uppercase tracking-widest text-placeholder">v0.1</span>
+        </div>
       </div>
 
       {/* Sub-nav for active intern */}

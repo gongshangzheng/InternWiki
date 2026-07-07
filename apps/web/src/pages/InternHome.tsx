@@ -238,7 +238,8 @@ export function InternHome() {
         <div>
           <h1 className="text-2xl font-bold text-heading">{intern.name}</h1>
           <p className="text-sm text-dim">
-            {intern.role ?? '实习生'} · {intern.team ?? '未分组'}
+            {intern.role ?? '实习生'}
+            {intern.team && ` · ${intern.team}`}
             {intern.startDate && ` · ${intern.startDate} 入职`}
           </p>
         </div>

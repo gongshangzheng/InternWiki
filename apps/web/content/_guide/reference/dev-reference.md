@@ -20,6 +20,24 @@ pnpm project help     # 查看 project CLI 帮助
 
 ---
 
+## 环境配置
+
+在 `apps/web/.env` 中配置环境变量（该文件被 .gitignore 忽略，不会提交）。可参考 `.env.example` 了解可用变量。
+
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `VITE_DEFAULT_INTERN` | 默认实习生 slug，日历等页面未指定 `?intern=` 时自动选中 | `alice` |
+
+设置默认实习生最简单的方式是使用 CLI 命令：
+
+```bash
+pnpm report set-default --intern alice
+```
+
+这会自动写入 `VITE_DEFAULT_INTERN=alice` 到 `.env` 文件。修改后重启 dev server 生效。
+
+---
+
 ## 分支与提交规范
 
 ### 分支策略
@@ -45,7 +63,7 @@ pnpm project help     # 查看 project CLI 帮助
 - **框架**: React 19 + React Router v7
 - **样式**: Tailwind v4（CSS 变量主题）
 - **日历**: FullCalendar 6
-- **CLI**: Node.js ESM 脚本
+- **CLI**: Node.js ESM 脚本（report / project / task）
 
 ---
 

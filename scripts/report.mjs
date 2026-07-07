@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const CONTENT_ROOT = resolve(__dirname, '..', 'apps', 'web', 'content')
 const INTERN_ROOT = resolve(CONTENT_ROOT, 'interns')
+const ENV_FILE = resolve(__dirname, '..', 'apps', 'web', '.env')
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -294,6 +295,52 @@ tags: []
   console.log('  Run pnpm content:build to compile.')
 }
 
+// ── Set Default Intern ─────────────────────────────────────
+
+function cmdSetDefault(args) {
+  const intern = args.intern
+  if (!intern) {
+    console.error('✗ --intern is required')
+    console.error('  pnpm report set-default --intern alice')
+    process.exit(1)
+  }
+
+  // Verify intern exists
+  const profilePath = resolve(INTERN_ROOT, intern, 'profile.md')
+  if (!existsSync(profilePath)) {
+    console.error(`✗ Intern not found: ${intern}`)
+    console.error(`  Expected: content/interns/${intern}/profile.md`)
+    process.exit(1)
+  }
+
+  // Read or create .env
+  let lines = []
+  if (existsSync(ENV_FILE)) {
+    lines = readFileSync(ENV_FILE, 'utf-8').split('\n')
+  }
+
+  // Update or append VITE_DEFAULT_INTERN
+  let found = false
+  const updated = lines.map((line) => {
+    if (line.startsWith('VITE_DEFAULT_INTERN=')) {
+      found = true
+      return `VITE_DEFAULT_INTERN=${intern}`
+    }
+    return line
+  })
+  if (!found) {
+    updated.push(`VITE_DEFAULT_INTERN=${intern}`)
+  }
+
+  // Clean up trailing empty lines and ensure single newline at end
+  const content = updated.filter((l) => l.trim() !== '' || l === updated[updated.length - 1]).join('\n').replace(/\n+$/, '\n')
+  writeFileSync(ENV_FILE, content + '\n')
+
+  console.log(`✓ Default intern set to: ${intern}`)
+  console.log(`  → ${ENV_FILE}`)
+  console.log('  Restart dev server for changes to take effect.')
+}
+
 // ── Main ─────────────────────────────────────────────────────
 
 const HELP = `
@@ -305,11 +352,13 @@ Commands:
   pnpm report new-weekly   --intern <slug> [--week YYYY-Wxx]
   pnpm report new-monthly  --intern <slug> [--month YYYY-MM]
   pnpm report new-doc      --intern <slug> --title "标题" [--slug custom-slug]
+  pnpm report set-default  --intern <slug>   设置默认实习生（写入 .env）
 
 Examples:
   pnpm report new-intern   --name 张三 --slug zhangsan --team 后端组
   pnpm report new-daily    --intern alice
   pnpm report new-doc      --intern alice --title "Redis 缓存指南"
+  pnpm report set-default  --intern alice
 `
 
 const { args, positional } = parseArgs(process.argv)
@@ -336,6 +385,9 @@ switch (command) {
     break
   case 'new-doc':
     cmdNewDoc(args)
+    break
+  case 'set-default':
+    cmdSetDefault(args)
     break
   default:
     console.error(`✗ Unknown command: ${command}`)

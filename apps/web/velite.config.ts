@@ -6,7 +6,7 @@ const reportSchema = s
   .object({
     title: s.string().optional(),
     slug: s.string().optional(),
-    date: s.isodate().optional(),
+    date: s.string().optional(),
     summary: s.string().optional(),
     tags: s.array(s.string()).default([]),
     metadata: s.record(s.string(), s.unknown()).default({}),
@@ -33,15 +33,15 @@ const projectSchema = s
     title: s.string().optional(),
     slug: s.string().optional(),
     status: s.enum(['active', 'completed', 'paused', 'planned']).default('active'),
-    startDate: s.isodate().optional(),
-    endDate: s.isodate().nullish(),
+    startDate: s.string().optional(),
+    endDate: s.string().nullish(),
     category: s.string().default('work'),
     tags: s.array(s.string()).default([]),
     summary: s.string().optional(),
     timeline: s
       .array(
         s.object({
-          date: s.isodate(),
+          date: s.string(),
           title: s.string(),
           type: s
             .enum(['milestone', 'progress', 'blocker', 'decision', 'note'])
@@ -74,8 +74,8 @@ const internSchema = s.object({
   slug: s.string().optional(),
   team: s.string().optional(),
   role: s.string().optional(),
-  startDate: s.isodate().optional(),
-  endDate: s.isodate().nullish(),
+  startDate: s.string().optional(),
+  endDate: s.string().nullish(),
   metadata: s.record(s.string(), s.unknown()).default({}),
   body: s.raw(),
 })

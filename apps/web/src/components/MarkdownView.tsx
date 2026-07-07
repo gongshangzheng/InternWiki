@@ -92,7 +92,8 @@ function CodeBlock({ className, children }: CodeProps) {
 }
 
 function InlineCode({ className, children, ...rest }: CodeProps) {
-  if ((className ?? '').includes('language-')) {
+  const text = String(children ?? '')
+  if ((className ?? '').includes('language-') || text.includes('\n')) {
     return <CodeBlock className={className}>{children}</CodeBlock>
   }
   return (

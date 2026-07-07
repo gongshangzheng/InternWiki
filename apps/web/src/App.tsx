@@ -20,6 +20,8 @@ import { ProjectsPage } from '@/pages/Projects'
 import { SharedList, SharedDetail } from '@/pages/Shared'
 import { HabitsPage } from '@/pages/Habits'
 import { CalendarPage } from '@/pages/Calendar'
+import { GuidePage } from '@/pages/Guide'
+import { HelpCircle } from 'lucide-react'
 
 // ── Layout ──────────────────────────────────────────────────
 
@@ -89,6 +91,10 @@ function NavBar({ onSearchOpen }: { onSearchOpen: () => void }) {
             搜索
           </button>
           <Link to="/calendar" className="rounded-md px-2.5 py-1 text-xs font-medium text-dim transition-colors hover:text-heading">日历</Link>
+          <Link to="/guide" className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-dim transition-colors hover:text-heading">
+            <HelpCircle className="h-3.5 w-3.5" />
+            指南
+          </Link>
           <ThemeToggle />
           <span className="text-[10px] uppercase tracking-widest text-placeholder">v0.1</span>
         </div>
@@ -200,6 +206,9 @@ export default function App() {
           {/* Projects (single page with hash-based tabs) */}
           <Route path="/interns/:name/projects" element={<ProjectsPage />} />
           <Route path="/interns/:name/projects/:slug" element={<ProjectsPage />} />
+
+          {/* Guide */}
+          <Route path="/guide" element={<GuidePage />} />
 
           {/* Calendar */}
           <Route path="/calendar" element={<CalendarPage />} />

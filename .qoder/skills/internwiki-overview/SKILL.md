@@ -1,9 +1,9 @@
 ---
-name: internwiki
-description: InternWiki 实习生文档平台使用指南。当用户需要创建实习生内容、管理任务、撰写报告、操作 InternWiki 框架时使用。触发词：添加实习生、写日报、写周报、写月报、新建项目、任务管理、InternWiki、实习生日志。Use when working within the InternWiki project, creating intern content, managing task trees, writing reports, or operating the InternWiki framework.
+name: internwiki-overview
+description: InternWiki 项目概览与全局规则。首次接触项目、不确定目录结构或全局约定时使用。触发词：InternWiki 概览、项目结构、全局规则、CLI 速查、开发命令。Use when onboarding to the InternWiki project, understanding directory structure, or checking global conventions.
 ---
 
-# InternWiki 使用指南
+# InternWiki 项目概览
 
 InternWiki 是多人实习文档平台。每个实习生拥有独立命名空间，管理日报/周报/月报/文档/项目任务树。
 技术栈：Vite 6 + React 19 + TypeScript + Tailwind v4 + Velite + React Router v7。
@@ -32,21 +32,20 @@ InternWiki/
 └── .github/workflows/deploy.yml  # GitHub Actions
 ```
 
-## 路由：你需要做什么？
+## 任务路由：你需要做什么？
 
-根据任务类型，阅读对应的参考文件获取详细模板和规范。
+根据任务类型，选择对应的 skill 获取详细模板和规范。
 
-| 任务 | 参考文件 | 关键命令 |
-|------|----------|----------|
-| 创建实习生档案 | `references/content-creation.md` §1 | `pnpm cli new-intern --name 张三 --slug zhangsan` |
-| 写日报/周报/月报 | `references/content-creation.md` §2-4 | `pnpm cli new-report --intern alice --type daily` |
-| 写技术文档 | `references/content-creation.md` §5 | `pnpm cli new-doc --intern alice --title "Redis 指南"` |
-| 在报告中链接项目/任务 | `references/content-creation.md` §10 | `[[project:slug]]` / `[[task:slug/id]]` |
-| 创建项目 | `references/project-management.md` §1 | `pnpm cli new-project --intern alice --slug xxx` |
-| 管理任务树 | `references/project-management.md` §2-7 | `pnpm cli task add/list/done/move/remove` |
-| 放置图片/截图 | `references/assets-and-git.md` §1 | 放 `public/interns/{slug}/` 下 |
-| Git 分支操作 | `references/assets-and-git.md` §2 | `git checkout -b intern-xxx` |
-| 了解页面功能 | `references/app-features.md` | 仪表盘/习惯/日历/搜索 |
+| 任务 | Skill | 关键命令 |
+|------|-------|----------|
+| 创建实习生档案 | `internwiki-reports` | `pnpm cli new-intern --name 张三 --slug zhangsan` |
+| 写日报/周报/月报 | `internwiki-reports` | `pnpm cli new-report --intern alice --type daily` |
+| 写技术文档 | `internwiki-reports` | `pnpm cli new-doc --intern alice --title "Redis 指南"` |
+| 在报告中链接项目/任务 | `internwiki-reports` | `[[project:slug]]` / `[[task:slug/id]]` |
+| 创建项目 | `internwiki-projects` | `pnpm cli new-project --intern alice --slug xxx` |
+| 管理任务树 | `internwiki-projects` | `pnpm cli task add/list/done/move/remove` |
+| 放置图片/截图 | `internwiki-devops` | 放 `public/interns/{slug}/` 下 |
+| Git 分支操作 | `internwiki-devops` | `git checkout -b intern-xxx` |
 
 ## CLI 速查
 
@@ -76,9 +75,9 @@ pnpm typecheck      # 类型检查
 
 ## 全局规则
 
-以下规则适用于所有操作，务必遵守：
+以下规则适用于所有操作：
 
-1. **Git 分支**：每个实习生必须在自己的 `intern-xxx` 分支上工作，不要直接提交到 main。详见 `references/assets-and-git.md` §2。
+1. **Git 分支**：每个实习生必须在自己的 `intern-xxx` 分支上工作，不要直接提交到 main。详见 `internwiki-devops` skill。
 
 2. **内容编译**：修改 Markdown 内容后需运行 `pnpm content:build` 重新编译 Velite（或用 `pnpm dev` 热重载）。`tasks.json` 不经过 Velite，修改即时生效。
 
@@ -89,13 +88,3 @@ pnpm typecheck      # 类型检查
 5. **Frontmatter**：Velite 自动从路径推断 `intern` 字段，无需手写。`slug` 不指定时取文件名，`title` 不指定时取 slug。
 
 6. **写作理念**：这个项目配合 Agent 使用，但关键内容（遇到的困难、解决方案、技术决策原因）应由实习生自己动笔，不要完全依赖 AI 写作。
-
-## 任务状态速查
-
-```
-planned → active → completed
-   │         ├──→ paused (暂停)
-   │         └──→ blocked (被阻塞，配合 blockedBy 字段)
-```
-
-子任务全完成时，父任务自动级联为 completed。详见 `references/project-management.md` §3-4。

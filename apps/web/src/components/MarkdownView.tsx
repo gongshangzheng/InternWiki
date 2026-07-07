@@ -7,7 +7,7 @@ import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Check, Copy } from 'lucide-react'
 import { cn, slugify, extractText } from '@/lib/utils'
-import { internalLinkHref, preprocessWikiLinks } from '@/lib/markdown'
+import { internalLinkHref, preprocessWikiLinks, preprocessHabitTags } from '@/lib/markdown'
 
 // Track .dark class on <html> so code blocks can switch theme reactively
 function useDarkMode() {
@@ -219,7 +219,10 @@ let currentInternSlug: string | undefined
 
 export function MarkdownView({ body, className, internSlug }: MarkdownViewProps) {
   currentInternSlug = internSlug
-  const processedBody = useMemo(() => preprocessWikiLinks(body), [body])
+  const processedBody = useMemo(
+    () => preprocessHabitTags(preprocessWikiLinks(body)),
+    [body],
+  )
   return (
     <div className={cn('md-body text-[0.92rem] leading-relaxed text-body', className)}>
       <ReactMarkdown

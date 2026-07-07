@@ -16,7 +16,7 @@ pnpm typecheck        # 类型检查
 pnpm report help      # 查看 report CLI 帮助
 pnpm task help        # 查看 task CLI 帮助
 pnpm project help     # 查看 project CLI 帮助
-pnpm config help      # 查看 config CLI 帮助
+pnpm setting help     # 查看 setting CLI 帮助
 ```
 
 ---
@@ -32,7 +32,7 @@ pnpm config help      # 查看 config CLI 帮助
 设置默认实习生最简单的方式是使用 CLI 命令：
 
 ```bash
-pnpm config set-default --intern alice
+pnpm setting set-default --intern alice
 ```
 
 这会自动写入 `VITE_DEFAULT_INTERN=alice` 到 `.env` 文件。修改后重启 dev server 生效。
@@ -64,7 +64,7 @@ pnpm config set-default --intern alice
 - **框架**: React 19 + React Router v7
 - **样式**: Tailwind v4（CSS 变量主题）
 - **日历**: FullCalendar 6
-- **CLI**: Node.js ESM 脚本（report / project / task / config）
+- **CLI**: Node.js ESM 脚本（report / project / task / setting）
 
 ---
 

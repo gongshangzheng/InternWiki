@@ -105,9 +105,7 @@ function NavBar({ onSearchOpen }: { onSearchOpen: () => void }) {
         <div className="border-t border-border bg-muted/50">
           <div className="mx-auto flex max-w-7xl items-center gap-0.5 px-4">
             <SubNav to={`/interns/${activeIntern.slug}`} label="概览" end />
-            <SubNav to={`/interns/${activeIntern.slug}/daily`} label="日报" />
-            <SubNav to={`/interns/${activeIntern.slug}/weekly`} label="周报" />
-            <SubNav to={`/interns/${activeIntern.slug}/monthly`} label="月报" />
+            <SubNav to={`/interns/${activeIntern.slug}/daily`} label="报告" reportActive />
             <SubNav to={`/interns/${activeIntern.slug}/docs`} label="文档" />
             <SubNav to={`/interns/${activeIntern.slug}/projects`} label="项目" />
             <SubNav to={`/interns/${activeIntern.slug}/habits`} label="习惯" />
@@ -118,18 +116,24 @@ function NavBar({ onSearchOpen }: { onSearchOpen: () => void }) {
   )
 }
 
-function SubNav({ to, label, end }: { to: string; label: string; end?: boolean }) {
+function SubNav({ to, label, end, reportActive }: { to: string; label: string; end?: boolean; reportActive?: boolean }) {
   return (
     <NavLink
       to={to}
       end={end}
-      className={({ isActive }) =>
-        `border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
+      className={({ isActive }) => {
+        if (reportActive) {
+          // Active for any of daily/weekly/monthly routes
+          const path = location.pathname
+          const isReport = /\/interns\/[^/]+\/(daily|weekly|monthly)/.test(path)
+          isActive = isReport
+        }
+        return `border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
           isActive
             ? 'border-primary text-primary'
             : 'border-transparent text-dim hover:text-heading'
         }`
-      }
+      }}
     >
       {label}
     </NavLink>

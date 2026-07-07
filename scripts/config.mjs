@@ -4,7 +4,7 @@
  * InternWiki Config CLI — 项目级配置管理
  *
  * Usage:
- *   pnpm config set-default --intern alice   设置默认实习生
+ *   pnpm setting set-default --intern alice   设置默认实习生
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
@@ -45,7 +45,7 @@ function cmdSetDefault(args) {
   const intern = args.intern
   if (!intern) {
     console.error('✗ --intern is required')
-    console.error('  pnpm config set-default --intern alice')
+    console.error('  pnpm setting set-default --intern alice')
     process.exit(1)
   }
 
@@ -94,10 +94,10 @@ const HELP = `
 InternWiki Config CLI — 项目级配置管理
 
 Commands:
-  pnpm config set-default  --intern <slug>   设置默认实习生（写入 .env）
+  pnpm setting set-default  --intern <slug>   设置默认实习生（写入 .env）
 
 Examples:
-  pnpm config set-default  --intern alice
+  pnpm setting set-default  --intern alice
 `
 
 const { args, positional } = parseArgs(process.argv)

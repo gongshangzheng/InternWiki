@@ -19,7 +19,7 @@
     "report": "node scripts/report.mjs",
     "task": "node scripts/task.mjs",
     "project": "node scripts/project.mjs",
-    "config": "node scripts/config.mjs"
+    "setting": "node scripts/config.mjs"
   },
   "devDependencies": {
     "prettier": "^3.6.2"

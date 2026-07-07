@@ -56,9 +56,7 @@ function HabitCard({ habit }: { habit: HabitTag }) {
           />
           <span className="text-sm font-semibold text-heading">{habit.label}</span>
         </div>
-        <span className="rounded bg-muted px-2 py-0.5 text-[10px] text-dim">
-          #{habit.tag}
-        </span>
+        <span className={`habit-tag habit-tag-${habit.tag}`}>#{habit.tag}</span>
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-3 text-center">

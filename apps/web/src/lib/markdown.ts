@@ -127,6 +127,30 @@ export function preprocessWikiLinks(body: string): string {
 }
 
 /**
+ * Pre-process habit tags in markdown body.
+ *
+ * Converts `#tag` patterns (preceded by whitespace or start-of-line) into
+ * colored HTML badge spans.  Code blocks and inline code are skipped.
+ *
+ * Only matches `#word` — markdown headings (`# Heading`) are safe because
+ * they require a space after `#`.
+ */
+export function preprocessHabitTags(body: string): string {
+  // Split by fenced code blocks and inline code, process only non-code parts
+  const parts = body.split(/(```[\s\S]*?```|`[^`]+`)/g)
+  return parts
+    .map((part, i) => {
+      if (i % 2 === 1) return part // code — skip
+      return part.replace(
+        /(^|\s)#(\w+)/gm,
+        (_, prefix: string, tag: string) =>
+          `${prefix}<span class="habit-tag habit-tag-${tag}">#${tag}</span>`,
+      )
+    })
+    .join('')
+}
+
+/**
  * Strip the most common markdown syntax to get a plain-text preview.
  * Used for list cards where rendering full markdown is overkill.
  */

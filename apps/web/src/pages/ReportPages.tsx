@@ -46,6 +46,9 @@ const COLLECTION_CONFIG: Record<
   },
 }
 
+/** Report types that share the "报告" nav group */
+const REPORT_TYPES: CollectionKey[] = ['daily', 'weekly', 'monthly']
+
 function getTags(item: ReportItem): string[] {
   if ('tags' in item && Array.isArray(item.tags)) {
     return item.tags as string[]
@@ -119,9 +122,24 @@ function ReportPage({ type }: { type: CollectionKey }) {
 
   return (
     <div className="flex gap-6">
-      {/* ── Left sidebar: report list ── */}
+      {/* ── Left sidebar: two-layer report list ── */}
       <aside className="hidden w-56 shrink-0 lg:block">
         <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">
+          {/* Layer 1: report type tabs (only for report types, not docs) */}
+          {REPORT_TYPES.includes(type) && (
+            <div className="report-type-tabs">
+              {REPORT_TYPES.map((rt) => (
+                <Link
+                  key={rt}
+                  to={COLLECTION_CONFIG[rt].basePath(internSlug)}
+                  className={`report-type-tab ${rt === type ? 'active' : ''}`}
+                >
+                  {COLLECTION_CONFIG[rt].label}
+                </Link>
+              ))}
+            </div>
+          )}
+          {/* Layer 2: article list */}
           <div className="mb-3 flex items-center gap-1.5 px-2 text-xs font-semibold text-heading">
             <FileText className="h-3.5 w-3.5" />
             {cfg.label}

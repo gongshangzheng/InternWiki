@@ -80,6 +80,28 @@ const internSchema = s.object({
   body: s.raw(),
 })
 
+// ── Guide schema ────────────────────────────────────────────
+
+const guideSchema = s
+  .object({
+    title: s.string(),
+    slug: s.string().optional(),
+    category: s.string().default('其他'),
+    order: s.number().default(0),
+    summary: s.string().optional(),
+    tags: s.array(s.string()).default([]),
+    metadata: s.record(s.string(), s.unknown()).default({}),
+    body: s.raw(),
+  })
+  .transform((data, { meta }) => {
+    const parts = (meta.path ?? '').replace(/\.md$/, '').split('/')
+    const filename = parts.pop() ?? ''
+    return {
+      ...data,
+      slug: data.slug ?? filename,
+    }
+  })
+
 // ── Collections ──────────────────────────────────────────────
 
 export default defineConfig({
@@ -121,6 +143,11 @@ export default defineConfig({
       name: 'shared',
       pattern: '_shared/**/*.md',
       schema: reportSchema,
+    }),
+    guide: defineCollection({
+      name: 'guide',
+      pattern: '_guide/**/*.md',
+      schema: guideSchema,
     }),
     projects: defineCollection({
       name: 'projects',

@@ -76,6 +76,10 @@ function CodeBlock({ className, children }: CodeProps) {
           fontSize: '0.82rem',
           lineHeight: 1.55,
         }}
+        codeStyle={{
+          display: 'block',
+          background: 'transparent',
+        }}
         PreTag="div"
       >
         {raw}

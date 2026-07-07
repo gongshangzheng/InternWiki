@@ -5,6 +5,7 @@ import {
   monthly,
   docs,
   shared,
+  guide,
   projects,
   type interns as Interns,
   type daily as Daily,
@@ -12,11 +13,12 @@ import {
   type monthly as Monthly,
   type docs as Docs,
   type shared as Shared,
+  type guide as Guide,
   type projects as Projects,
 } from './.velite'
 import type { TaskTree, TaskNode, TaskStatus } from './schema'
 
-export type { Interns, Daily, Weekly, Monthly, Docs, Shared, Projects }
+export type { Interns, Daily, Weekly, Monthly, Docs, Shared, Guide, Projects }
 export type { TaskTree, TaskNode, TaskStatus }
 
 // ── Sorting helpers ──────────────────────────────────────────
@@ -66,6 +68,39 @@ export const getDocBySlug = (slug: string, intern?: string): Docs | undefined =>
 export const getAllShared = (): Shared[] => [...shared].sort(byDateDesc)
 export const getSharedBySlug = (slug: string): Shared | undefined =>
   findBySlug(shared, slug)
+
+// ── Guide ────────────────────────────────────────────────────
+
+/** Category display order for the guide sidebar */
+const GUIDE_CATEGORY_ORDER = ['开始', '日常使用', '功能参考', '附录']
+
+export const getAllGuides = (): Guide[] =>
+  [...guide].sort((a, b) => {
+    const catA = GUIDE_CATEGORY_ORDER.indexOf(a.category)
+    const catB = GUIDE_CATEGORY_ORDER.indexOf(b.category)
+    const catIdxA = catA === -1 ? 999 : catA
+    const catIdxB = catB === -1 ? 999 : catB
+    if (catIdxA !== catIdxB) return catIdxA - catIdxB
+    return (a.order ?? 0) - (b.order ?? 0)
+  })
+
+export const getGuideBySlug = (slug: string): Guide | undefined =>
+  findBySlug(guide, slug)
+
+/** Group guides by category for sidebar rendering */
+export function getGuidesByCategory(): Array<{ category: string; items: Guide[] }> {
+  const all = getAllGuides()
+  const categories: Array<{ category: string; items: Guide[] }> = []
+  for (const item of all) {
+    const existing = categories.find((c) => c.category === item.category)
+    if (existing) {
+      existing.items.push(item)
+    } else {
+      categories.push({ category: item.category, items: [item] })
+    }
+  }
+  return categories
+}
 
 /** Get reports for a specific intern (daily + weekly + monthly + docs) */
 export function getInternReports(internSlug: string) {

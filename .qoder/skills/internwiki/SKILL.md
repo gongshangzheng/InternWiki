@@ -1,6 +1,6 @@
 ---
-description: InternWiki 实习生文档平台使用指南。当用户需要创建实习生内容、管理任务、撰写报告、操作 InternWiki 框架时使用。触发词：添加实习生、写日报、写周报、写月报、新建项目、任务管理、InternWiki、实习生日志。
-globs: ["**/InternWiki/**", "**/InternWiki"]
+name: internwiki
+description: InternWiki 实习生文档平台使用指南。当用户需要创建实习生内容、管理任务、撰写报告、操作 InternWiki 框架时使用。触发词：添加实习生、写日报、写周报、写月报、新建项目、任务管理、InternWiki、实习生日志。Use when working within the InternWiki project, creating intern content, managing task trees, writing reports, or operating the InternWiki framework.
 ---
 
 # InternWiki 使用指南

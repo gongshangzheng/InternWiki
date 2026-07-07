@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { getInternBySlug, getInternReports, getProjectsByIntern } from '@/content/loader'
+import { MarkdownView } from '@/components/MarkdownView'
 
 export function InternHome() {
   const { name } = useParams<{ name: string }>()
@@ -38,7 +39,7 @@ export function InternHome() {
       {/* Bio */}
       {intern.body && (
         <div className="lo-card p-4">
-          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: intern.body }} />
+          <MarkdownView content={intern.body} />
         </div>
       )}
 

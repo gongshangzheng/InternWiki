@@ -1,5 +1,6 @@
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { getInternBySlug, getProjectsByIntern, getProjectTasks, countTasks } from '@/content/loader'
+import { MarkdownView } from '@/components/MarkdownView'
 
 /** Project list for an intern */
 export function ProjectsPage() {
@@ -139,7 +140,7 @@ export function ProjectDetailPage() {
       )}
 
       {/* Project body */}
-      <article className="prose max-w-none" dangerouslySetInnerHTML={{ __html: project.body }} />
+      <MarkdownView content={project.body} />
     </section>
   )
 }

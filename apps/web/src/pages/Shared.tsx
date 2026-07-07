@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { getAllShared, getSharedBySlug } from '@/content/loader'
+import { MarkdownView } from '@/components/MarkdownView'
 
 export function SharedList() {
   const items = getAllShared()
@@ -72,7 +73,7 @@ export function SharedDetail() {
         </div>
       </div>
 
-      <article className="prose max-w-none" dangerouslySetInnerHTML={{ __html: item.body }} />
+      <MarkdownView content={item.body} />
     </section>
   )
 }

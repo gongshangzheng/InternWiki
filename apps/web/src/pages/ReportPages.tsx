@@ -1,6 +1,7 @@
 import { useParams, Link, Navigate } from 'react-router-dom'
 import { getInternBySlug, getInternReports } from '@/content/loader'
 import type { Daily, Weekly, Monthly, Docs } from '@/content/loader'
+import { MarkdownView } from '@/components/MarkdownView'
 
 type CollectionKey = 'daily' | 'weekly' | 'monthly' | 'docs'
 
@@ -144,7 +145,7 @@ export function ReportDetailPage({ type }: { type: CollectionKey }) {
         </div>
       </div>
 
-      <article className="prose max-w-none" dangerouslySetInnerHTML={{ __html: item.body }} />
+      <MarkdownView content={item.body} />
     </section>
   )
 }

@@ -27,7 +27,6 @@ function parseHabits(body: string, date: string): HabitRecord[] {
     if (match) {
       const checked = match[1].toLowerCase() === 'x'
       const label = match[2].trim()
-      const tag = match[3].toLowerCase()
       records.push({ date, checked, label })
     }
   }

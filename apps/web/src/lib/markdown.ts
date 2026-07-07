@@ -3,10 +3,6 @@ import {
   weekly,
   monthly,
   docs,
-  type daily as Daily,
-  type weekly as Weekly,
-  type monthly as Monthly,
-  type docs as Docs,
 } from '@/content/.velite'
 
 type CollectionKey = 'daily' | 'weekly' | 'monthly' | 'docs'
@@ -123,7 +119,7 @@ export function preprocessWikiLinks(body: string): string {
   // [[type:ref]] or [[type:ref|display text]]
   return body.replace(
     /\[\[(project|task):([^\]|]+)(?:\|([^\]]+))?\]\]/g,
-    (match, type: string, ref: string, display?: string) => {
+    (_match, type: string, ref: string, display?: string) => {
       const text = display?.trim() || ref.trim()
       return `[${text}](internwiki:${type}:${ref.trim()})`
     },

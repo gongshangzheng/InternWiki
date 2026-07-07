@@ -209,6 +209,7 @@ export default function App() {
 
           {/* Guide */}
           <Route path="/guide" element={<GuidePage />} />
+          <Route path="/guide/:slug" element={<GuidePage />} />
 
           {/* Calendar */}
           <Route path="/calendar" element={<CalendarPage />} />

@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom'
-import { Flame, TrendingUp, TrendingDown, Check, X } from 'lucide-react'
+import { Flame, Check, X } from 'lucide-react'
 import { getInternBySlug } from '@/content/loader'
 import { useHabits, type HabitTag } from '@/hooks/useHabits'
 

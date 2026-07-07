@@ -167,6 +167,12 @@ export function ProjectsPage() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [allProjects])
 
+  const activeProject = allProjects.find((p) => p.slug === activeSlug) ?? null
+  const activeColorIdx = allProjects.findIndex((p) => p.slug === activeSlug)
+  const activeColor = getProjectColor(Math.max(0, activeColorIdx))
+  const activeTree = activeSlug ? taskTrees[activeSlug] ?? null : null
+  const isLoadingTree = activeSlug ? loading[activeSlug] ?? false : false
+
   // Auto-select task when task tree loads and we have a pending task ID
   useEffect(() => {
     if (pendingTaskId && activeTree) {
@@ -177,12 +183,6 @@ export function ProjectsPage() {
       }
     }
   }, [pendingTaskId, activeTree])
-
-  const activeProject = allProjects.find((p) => p.slug === activeSlug) ?? null
-  const activeColorIdx = allProjects.findIndex((p) => p.slug === activeSlug)
-  const activeColor = getProjectColor(Math.max(0, activeColorIdx))
-  const activeTree = activeSlug ? taskTrees[activeSlug] ?? null : null
-  const isLoadingTree = activeSlug ? loading[activeSlug] ?? false : false
 
   const handleProjectChange = (slug: string) => {
     setActiveSlug(slug)

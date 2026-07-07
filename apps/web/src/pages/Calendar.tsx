@@ -7,9 +7,9 @@ import type { EventInput } from '@fullcalendar/core'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { FolderKanban, FileText, Check, Circle, AlertCircle, ChevronDown } from 'lucide-react'
+import { getDefaultIntern } from '@/lib/utils'
 import {
   getAllInterns,
-  getInternBySlug,
   getProjectsByIntern,
   getProjectTasks,
   getInternReports,
@@ -18,7 +18,6 @@ import {
   findRecurringTasks,
   type TaskNode,
   type RecurringConfig,
-  type TaskTree,
 } from '@/content/loader'
 
 // ── Types ─────────────────────────────────────────────────────
@@ -221,7 +220,7 @@ function InternSelector({
 export function CalendarPage() {
   const allInterns = getAllInterns()
   const [searchParams, setSearchParams] = useSearchParams()
-  const urlIntern = searchParams.get('intern') ?? allInterns[0]?.slug ?? ''
+  const urlIntern = searchParams.get('intern') ?? getDefaultIntern() ?? allInterns[0]?.slug ?? ''
 
   const [selectedIntern, setSelectedIntern] = useState(urlIntern)
   const [datedTasks, setDatedTasks] = useState<Array<TaskNode & { projectSlug: string }>>([])
@@ -454,7 +453,6 @@ export function CalendarPage() {
                       <span className="ml-0.5 text-red-500/60">{overdueTasks.length}</span>
                     </h2>
                     {overdueTasks.map((t) => {
-                      const colors = PROJECT_COLORS[t.projectSlug] ?? DEFAULT_COLOR
                       return (
                         <div
                           key={`task-${t.projectSlug}-${t.id}`}

@@ -16,10 +16,10 @@ import {
   type guide as Guide,
   type projects as Projects,
 } from './.velite'
-import type { TaskTree, TaskNode, TaskStatus } from './schema'
+import type { TaskTree, TaskNode, TaskStatus, RecurringConfig } from './schema'
 
 export type { Interns, Daily, Weekly, Monthly, Docs, Shared, Guide, Projects }
-export type { TaskTree, TaskNode, TaskStatus }
+export type { TaskTree, TaskNode, TaskStatus, RecurringConfig }
 
 // ── Sorting helpers ──────────────────────────────────────────
 
@@ -179,7 +179,7 @@ function cascadeStatus(tasks: TaskNode[]): TaskNode[] {
 
 /** Get all task trees for an intern */
 export function getInternTaskTrees(
-  internSlug: string,
+  _internSlug: string,
 ): Array<TaskTree & { projectSlug: string }> {
   // This is a sync placeholder; real async loading is via getProjectTasks()
   return []

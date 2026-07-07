@@ -1,5 +1,15 @@
 import { clsx, type ClassValue } from 'clsx'
+
+/**
+ * Get the default intern slug from environment configuration (.env → VITE_DEFAULT_INTERN).
+ * Returns undefined if not configured; callers should provide their own fallback.
+ */
+export function getDefaultIntern(): string | undefined {
+  const slug = import.meta.env.VITE_DEFAULT_INTERN
+  return slug || undefined
+}
 import { twMerge } from 'tailwind-merge'
+import type { ReactNode, ReactElement } from 'react'
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs))
@@ -20,12 +30,13 @@ export function slugify(text: string): string {
 /**
  * Extract text content from React children (for heading ID generation).
  */
-export function extractText(children: React.ReactNode): string {
+export function extractText(children: ReactNode): string {
   if (typeof children === 'string') return children
   if (typeof children === 'number') return String(children)
   if (Array.isArray(children)) return children.map(extractText).join('')
   if (children && typeof children === 'object' && 'props' in children) {
-    return extractText((children as React.ReactElement).props.children)
+    const props = (children as ReactElement).props as { children?: ReactNode }
+    return extractText(props.children)
   }
   return ''
 }

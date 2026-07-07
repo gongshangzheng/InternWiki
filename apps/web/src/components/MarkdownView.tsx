@@ -6,7 +6,7 @@ import rehypeRaw from 'rehype-raw'
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Check, Copy } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, slugify, extractText } from '@/lib/utils'
 import { internalLinkHref, preprocessWikiLinks } from '@/lib/markdown'
 
 // Track .dark class on <html> so code blocks can switch theme reactively
@@ -76,9 +76,12 @@ function CodeBlock({ className, children }: CodeProps) {
           fontSize: '0.82rem',
           lineHeight: 1.55,
         }}
-        codeStyle={{
-          display: 'block',
-          background: 'transparent',
+        codeTagProps={{
+          style: {
+            display: 'block',
+            background: 'transparent',
+            width: '100%',
+          },
         }}
         PreTag="div"
       >
@@ -130,10 +133,31 @@ function MarkdownLink({
   )
 }
 
+// ── Heading components with auto-generated IDs for TOC anchors ──
+
+function makeHeading(tag: 'h1' | 'h2' | 'h3' | 'h4') {
+  const Tag = tag
+  const Component = ({ children, ...rest }: { children?: ReactNode }) => {
+    const text = extractText(children)
+    const id = slugify(text)
+    return (
+      <Tag id={id} {...rest}>
+        {children}
+      </Tag>
+    )
+  }
+  Component.displayName = `Markdown${tag.toUpperCase()}`
+  return Component
+}
+
 const components: Components = {
   a: MarkdownLink,
   code: InlineCode,
   pre: MarkdownPre,
+  h1: makeHeading('h1'),
+  h2: makeHeading('h2'),
+  h3: makeHeading('h3'),
+  h4: makeHeading('h4'),
   table: ({ children, ...rest }) => (
     <div className="my-4 overflow-x-auto rounded-lg border border-border">
       <table className="w-full text-sm" {...rest}>

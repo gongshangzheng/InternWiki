@@ -7,7 +7,6 @@ import {
   getProjectsByIntern,
   getProjectTasks,
   countTasks,
-  type TaskTree,
 } from '@/content/loader'
 import { MarkdownView } from '@/components/MarkdownView'
 import { stripMarkdown } from '@/lib/markdown'

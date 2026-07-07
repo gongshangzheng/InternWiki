@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { projectTasksPlugin } from './plugins/project-tasks'
+import { projectTasksPlugin } from './plugins/project-tasks.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 

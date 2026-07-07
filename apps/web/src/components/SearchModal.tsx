@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, X, FileText, FolderKanban } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import {
   getAllDaily,
   getAllWeekly,

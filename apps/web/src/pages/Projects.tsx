@@ -1,146 +1,213 @@
-import { useParams, Link, Navigate } from 'react-router-dom'
-import { getInternBySlug, getProjectsByIntern, getProjectTasks, countTasks } from '@/content/loader'
+import { useState, useEffect, useCallback } from 'react'
+import { useParams, Navigate } from 'react-router-dom'
+import { GitBranch, ArrowLeft } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { MarkdownView } from '@/components/MarkdownView'
+import { TaskTreeNode, getProjectColor } from '@/components/TaskTreeNode'
+import { ProjectTabs, PROJECT_STATUS_CONFIG } from '@/components/ProjectTabs'
+import { TaskNoteView } from '@/components/TaskNoteView'
+import {
+  getInternBySlug,
+  getProjectsByIntern,
+  getProjectTasks,
+  countTasks,
+  type TaskTree,
+  type TaskNode,
+  type Projects,
+} from '@/content/loader'
 
-/** Project list for an intern */
+// ── Project README renderer ──────────────────────────────────
+
+function ProjectReadme({
+  project,
+  colorIndex,
+}: {
+  project: Projects
+  colorIndex: number
+}) {
+  const StatusIcon = PROJECT_STATUS_CONFIG[project.status]?.icon ?? GitBranch
+  const color = getProjectColor(Math.max(0, colorIndex))
+
+  return (
+    <div>
+      {/* Meta header */}
+      <div className="mb-6 flex flex-wrap items-center gap-3 border-b border-border pb-4">
+        <span className={cn('h-3 w-3 rounded-full', color.dot)} />
+        <h1 className="text-xl font-bold text-heading">{project.title}</h1>
+        <span className={cn('inline-flex items-center gap-1 text-xs', PROJECT_STATUS_CONFIG[project.status]?.color)}>
+          <StatusIcon className="h-3.5 w-3.5" />
+          {PROJECT_STATUS_CONFIG[project.status]?.label ?? project.status}
+        </span>
+        {project.startDate && (
+          <span className="font-mono text-xs text-dim">
+            {project.startDate.slice(0, 10)}
+            {project.endDate ? ` → ${project.endDate.slice(0, 10)}` : ' → 至今'}
+          </span>
+        )}
+      </div>
+
+      {/* Markdown body */}
+      {project.body ? (
+        <MarkdownView body={project.body} />
+      ) : (
+        <p className="text-sm text-dim">暂无 README 内容。</p>
+      )}
+    </div>
+  )
+}
+
+// ── Main page ────────────────────────────────────────────────
+
 export function ProjectsPage() {
   const { name } = useParams<{ name: string }>()
   const intern = getInternBySlug(name ?? '')
 
   if (!intern) return <Navigate to="/" replace />
 
-  const projects = getProjectsByIntern(intern.slug ?? '')
+  const internSlug = intern.slug ?? ''
+  const allProjects = getProjectsByIntern(internSlug)
 
-  return (
-    <section className="space-y-4">
-      <div>
-        <Link to={`/interns/${intern.slug}`} className="text-xs text-dim hover:text-heading">
-          ← {intern.name}
-        </Link>
-        <h1 className="lo-section-title mt-1">项目</h1>
-        <p className="text-xs text-dim">任务树与项目进度</p>
-      </div>
+  const [activeSlug, setActiveSlug] = useState<string | null>(() => {
+    const hash = window.location.hash.slice(1)
+    if (hash && allProjects.some((p) => p.slug === hash)) return hash
+    return allProjects.length > 0 ? (allProjects[0].slug ?? null) : null
+  })
+  const [taskTrees, setTaskTrees] = useState<Record<string, TaskTree | null>>({})
+  const [loading, setLoading] = useState<Record<string, boolean>>({})
+  const [selectedTask, setSelectedTask] = useState<TaskNode | null>(null)
 
-      {projects.length === 0 ? (
-        <p className="py-8 text-center text-sm text-dim">还没有项目。</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {projects.map((p) => {
-            const tasks = getProjectTasks(intern.slug ?? '', p.slug ?? '')
-            const stats = tasks ? countTasks(tasks.tasks) : { total: 0, completed: 0 }
-            const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0
-            return (
-              <Link
-                key={`${p.intern}-${p.slug}`}
-                to={`/interns/${intern.slug}/projects/${p.slug}`}
-                className="lo-card p-4 transition-colors hover:border-primary/40"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-heading">{p.title}</span>
-                  <span className="rounded bg-muted px-2 py-0.5 text-[10px] text-dim">{p.status}</span>
-                </div>
-                {p.summary && <p className="mt-1 text-xs text-dim">{p.summary}</p>}
-                {stats.total > 0 && (
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between text-[10px] text-dim">
-                      <span>{stats.completed}/{stats.total}</span>
-                      <span>{pct}%</span>
-                    </div>
-                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                )}
-              </Link>
-            )
-          })}
-        </div>
-      )}
-    </section>
+  const loadTaskTree = useCallback(
+    async (slug: string) => {
+      if (taskTrees[slug] !== undefined || loading[slug]) return
+      setLoading((prev) => ({ ...prev, [slug]: true }))
+      const tree = await getProjectTasks(internSlug, slug)
+      setTaskTrees((prev) => ({ ...prev, [slug]: tree }))
+      setLoading((prev) => ({ ...prev, [slug]: false }))
+    },
+    [taskTrees, loading, internSlug],
   )
-}
 
-/** Single project detail with task tree */
-export function ProjectDetailPage() {
-  const { name, slug } = useParams<{ name: string; slug: string }>()
-  const intern = getInternBySlug(name ?? '')
+  // Load task tree for active project
+  useEffect(() => {
+    if (activeSlug) loadTaskTree(activeSlug)
+  }, [activeSlug, loadTaskTree])
 
-  if (!intern) return <Navigate to="/" replace />
+  // Listen for hash changes (browser back/forward)
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.slice(1)
+      if (hash && allProjects.some((p) => p.slug === hash)) {
+        setActiveSlug(hash)
+        setSelectedTask(null)
+      }
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [allProjects])
 
-  const projects = getProjectsByIntern(intern.slug ?? '')
-  const project = projects.find((p) => p.slug === slug)
+  const activeProject = allProjects.find((p) => p.slug === activeSlug) ?? null
+  const activeColorIdx = allProjects.findIndex((p) => p.slug === activeSlug)
+  const activeColor = getProjectColor(Math.max(0, activeColorIdx))
+  const activeTree = activeSlug ? taskTrees[activeSlug] ?? null : null
+  const isLoadingTree = activeSlug ? loading[activeSlug] ?? false : false
 
-  if (!project) {
+  const handleProjectChange = (slug: string) => {
+    setActiveSlug(slug)
+    setSelectedTask(null)
+    loadTaskTree(slug)
+    window.location.hash = slug
+  }
+
+  const handleBackToReadme = () => setSelectedTask(null)
+
+  if (allProjects.length === 0) {
     return (
       <div className="py-16 text-center">
-        <p className="text-sm text-dim">未找到项目: {slug}</p>
-        <Link to={`/interns/${intern.slug}/projects`} className="mt-2 inline-block text-xs text-primary hover:underline">
-          返回项目列表
-        </Link>
+        <GitBranch className="mx-auto h-10 w-10 text-placeholder" />
+        <p className="mt-3 text-sm text-dim">还没有项目。</p>
       </div>
     )
   }
 
-  const tasks = getProjectTasks(intern.slug ?? '', project.slug ?? '')
-  const stats = tasks ? countTasks(tasks.tasks) : { total: 0, completed: 0 }
-  const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0
-
   return (
-    <section className="space-y-4">
-      <div>
-        <Link to={`/interns/${intern.slug}/projects`} className="text-xs text-dim hover:text-heading">
-          ← 项目列表
-        </Link>
-        <h1 className="lo-section-title mt-1">{project.title}</h1>
-        <div className="flex items-center gap-3 text-xs text-dim">
-          <span className="rounded bg-muted px-2 py-0.5">{project.status}</span>
-          {project.startDate && <span>{project.startDate}</span>}
+    <section className="space-y-6">
+      {/* Header + tabs */}
+      <header className="space-y-3">
+        <div className="flex items-center gap-2">
+          <GitBranch className="h-5 w-5 text-primary" />
+          <h1 className="lo-section-title">项目</h1>
         </div>
-      </div>
+        <ProjectTabs
+          projects={allProjects}
+          activeSlug={activeSlug}
+          onSelect={handleProjectChange}
+        />
+      </header>
 
-      {project.summary && <p className="text-sm text-body">{project.summary}</p>}
-
-      {/* Progress */}
-      {stats.total > 0 && (
-        <div className="lo-card p-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium text-heading">任务进度</span>
-            <span className="text-dim">{stats.completed}/{stats.total} ({pct}%)</span>
-          </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-          </div>
-        </div>
-      )}
-
-      {/* Task tree placeholder — Phase 3 will implement TaskTree component */}
-      {tasks && tasks.tasks.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold text-heading">任务树</h2>
-          <div className="mt-2 space-y-1">
-            {tasks.tasks.map((t) => (
-              <div key={t.id} className="lo-card flex items-center gap-2 p-2">
-                <span className={`h-2 w-2 rounded-full ${
-                  t.status === 'completed' ? 'bg-green-500'
-                  : t.status === 'active' ? 'bg-blue-500'
-                  : t.status === 'paused' ? 'bg-amber-500'
-                  : 'bg-gray-400'
-                }`} />
-                <span className={`text-sm ${t.status === 'completed' ? 'text-dim line-through' : 'text-body'}`}>
-                  {t.title}
+      {activeProject && (
+        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+          {/* Left sidebar: task tree */}
+          <aside className="space-y-3">
+            <div className="flex items-center gap-2 border-b border-border pb-2">
+              <button
+                onClick={handleBackToReadme}
+                className={cn(
+                  'flex items-center gap-1.5 text-xs font-semibold tracking-wide transition-colors',
+                  selectedTask ? 'text-primary hover:text-primary/80' : 'text-heading',
+                )}
+              >
+                {selectedTask && <ArrowLeft className="h-3 w-3" />}
+                {activeProject.title}
+              </button>
+              {activeTree && (
+                <span className="ml-auto text-[10px] text-placeholder">
+                  {countTasks(activeTree.tasks).completed}/{countTasks(activeTree.tasks).total}
                 </span>
-                <span className="ml-auto text-[10px] text-dim">{t.status}</span>
+              )}
+            </div>
+
+            {isLoadingTree ? (
+              <div className="py-8 text-center text-xs text-dim">加载中…</div>
+            ) : activeTree && activeTree.tasks.length > 0 ? (
+              <div className="space-y-0.5">
+                {activeTree.tasks.map((task, i) => (
+                  <TaskTreeNode
+                    key={task.id}
+                    task={task}
+                    depth={0}
+                    isLast={i === activeTree.tasks.length - 1}
+                    parentLines={[]}
+                    projectColor={activeColor}
+                    selectedId={selectedTask?.id ?? null}
+                    onSelect={setSelectedTask}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
-          <p className="mt-2 text-center text-[10px] text-placeholder">
-            Phase 3 将实现完整的可展开/折叠任务树
-          </p>
+            ) : (
+              <div className="py-8 text-center">
+                <GitBranch className="mx-auto h-8 w-8 text-placeholder" />
+                <p className="mt-2 text-xs text-dim">暂无任务树数据。</p>
+              </div>
+            )}
+          </aside>
+
+          {/* Right: project README or task note */}
+          <main className="min-w-0">
+            {selectedTask ? (
+              <TaskNoteView
+                task={selectedTask}
+                internSlug={internSlug}
+                projectSlug={activeProject.slug ?? ''}
+              />
+            ) : (
+              <ProjectReadme project={activeProject} colorIndex={activeColorIdx} />
+            )}
+          </main>
         </div>
       )}
-
-      {/* Project body */}
-      <MarkdownView body={project.body} />
     </section>
   )
 }
+
+// Keep the old export name for backward compatibility (App.tsx import)
+export const ProjectDetailPage = ProjectsPage

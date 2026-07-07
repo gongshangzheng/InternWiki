@@ -3,12 +3,15 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { projectTasksPlugin } from './plugins/project-tasks'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
+const BASE = '/InternWiki/'
+
 export default defineConfig({
-  base: '/InternWiki/',
-  plugins: [react(), tailwindcss()],
+  base: BASE,
+  plugins: [react(), tailwindcss(), projectTasksPlugin(BASE)],
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),

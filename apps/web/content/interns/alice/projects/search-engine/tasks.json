@@ -6,59 +6,70 @@
       "id": "t1",
       "title": "需求分析与架构设计",
       "status": "completed",
+      "assignee": "alice",
       "startDate": "2026-07-07",
       "endDate": "2026-07-07",
       "description": "需求调研、技术选型、架构设计文档",
+      "tags": ["设计", "架构"],
       "children": [
-        { "id": "t1-1", "title": "需求调研", "status": "completed", "startDate": null, "endDate": null, "description": "", "children": [] },
-        { "id": "t1-2", "title": "索引 Schema 设计", "status": "completed", "startDate": null, "endDate": null, "description": "", "children": [] }
+        { "id": "t1-1", "title": "需求调研", "status": "completed", "assignee": "alice", "startDate": null, "endDate": null, "description": "", "children": [] },
+        { "id": "t1-2", "title": "索引 Schema 设计", "status": "completed", "assignee": "alice", "notePath": "notes/schema-design.md", "startDate": null, "endDate": null, "description": "", "tags": ["设计"], "children": [] }
       ]
     },
     {
       "id": "t2",
       "title": "爬虫模块",
       "status": "active",
+      "assignee": "alice",
       "startDate": "2026-07-08",
       "endDate": null,
       "description": "URL 队列 + HTML 解析 + Robots.txt 遵守",
+      "tags": ["后端", "核心"],
       "children": [
-        { "id": "t2-1", "title": "URL 队列管理", "status": "planned", "startDate": null, "endDate": null, "description": "", "children": [] },
-        { "id": "t2-2", "title": "HTML 解析器", "status": "planned", "startDate": null, "endDate": null, "description": "", "children": [] },
-        { "id": "t2-3", "title": "Robots.txt 遵守", "status": "planned", "startDate": null, "endDate": null, "description": "", "children": [] }
+        { "id": "t2-1", "title": "URL 队列管理", "status": "planned", "assignee": "alice", "startDate": null, "endDate": null, "description": "", "children": [] },
+        { "id": "t2-2", "title": "HTML 解析器", "status": "active", "assignee": "alice", "startDate": null, "endDate": null, "description": "", "children": [] },
+        { "id": "t2-3", "title": "Robots.txt 遵守", "status": "blocked", "assignee": "alice", "startDate": null, "endDate": null, "description": "等待运维配置域名", "blockedBy": ["t2-1"], "children": [] }
       ]
     },
     {
       "id": "t3",
       "title": "索引服务",
       "status": "planned",
+      "assignee": "alice",
       "startDate": null,
       "endDate": null,
       "description": "Elasticsearch 索引写入与更新",
+      "tags": ["后端"],
       "children": []
     },
     {
       "id": "t4",
       "title": "查询服务",
       "status": "planned",
+      "assignee": "alice",
       "startDate": null,
       "endDate": null,
       "description": "搜索 API + 相关性排序",
+      "tags": ["API"],
       "children": []
     },
     {
       "id": "r-1",
       "title": "每日技术学习",
       "status": "active",
+      "assignee": "alice",
       "startDate": null,
       "endDate": null,
       "description": "",
+      "tags": ["routine", "growth"],
       "recurring": {
         "pattern": "daily",
         "startTime": "20:00",
         "endTime": "21:00",
         "activeFrom": "2026-07-07",
         "activeUntil": null,
-        "excludeDates": []
+        "excludeDates": [],
+        "reportLevels": ["daily"]
       },
       "children": []
     }

@@ -88,23 +88,43 @@ export function getProjectsByIntern(internSlug: string): Projects[] {
 // ── Task Trees ───────────────────────────────────────────────
 // Task trees live alongside project READMEs in
 // content/interns/{name}/projects/{slug}/tasks.json.
-// We use Vite's import.meta.glob to load them at build time.
+// Loaded asynchronously via fetch (served by projectTasksPlugin in dev,
+// copied to dist/ during build).
 
-const taskModules = import.meta.glob<{ default: TaskTree }>(
-  '/apps/web/content/interns/*/projects/*/tasks.json',
-  { eager: true, import: 'default' },
-)
+/**
+ * Async fetch: load a project's task tree from the server.
+ * Returns null if the tasks.json file doesn't exist.
+ */
+export async function getProjectTasks(
+  internSlug: string,
+  projectSlug: string,
+): Promise<TaskTree | null> {
+  const url = `/InternWiki/interns/${internSlug}/${projectSlug}.tasks.json`
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const tree: TaskTree = await res.json()
+    return { ...tree, tasks: cascadeStatus(tree.tasks) }
+  } catch {
+    return null
+  }
+}
 
-// Build a lookup: `${intern}/${slug}` → TaskTree
-const taskTreeMap = new Map<string, TaskTree>()
-for (const [path, mod] of Object.entries(taskModules)) {
-  const parts = path.split('/')
-  const internIdx = parts.indexOf('interns')
-  const intern = internIdx >= 0 ? parts[internIdx + 1] : ''
-  const projectsIdx = parts.indexOf('projects')
-  const slug = projectsIdx >= 0 ? parts[projectsIdx + 1] : ''
-  if (intern && slug) {
-    taskTreeMap.set(`${intern}/${slug}`, mod as unknown as TaskTree)
+/**
+ * Fetch a task note (Markdown) for a specific project + notePath.
+ */
+export async function fetchTaskNote(
+  internSlug: string,
+  projectSlug: string,
+  notePath: string,
+): Promise<string | null> {
+  const url = `/InternWiki/interns/${internSlug}/${projectSlug}/notes/${notePath}`
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    return await res.text()
+  } catch {
+    return null
   }
 }
 
@@ -122,26 +142,12 @@ function cascadeStatus(tasks: TaskNode[]): TaskNode[] {
   })
 }
 
-export function getProjectTasks(internSlug: string, projectSlug: string): TaskTree | null {
-  const raw = taskTreeMap.get(`${internSlug}/${projectSlug}`)
-  if (!raw) return null
-  return { ...raw, tasks: cascadeStatus(raw.tasks) }
-}
-
 /** Get all task trees for an intern */
-export function getInternTaskTrees(internSlug: string): Array<TaskTree & { projectSlug: string }> {
-  const result: Array<TaskTree & { projectSlug: string }> = []
-  for (const [key, tree] of taskTreeMap) {
-    if (key.startsWith(`${internSlug}/`)) {
-      const slug = key.split('/')[1]
-      result.push({
-        ...tree,
-        tasks: cascadeStatus(tree.tasks),
-        projectSlug: slug,
-      })
-    }
-  }
-  return result
+export function getInternTaskTrees(
+  internSlug: string,
+): Array<TaskTree & { projectSlug: string }> {
+  // This is a sync placeholder; real async loading is via getProjectTasks()
+  return []
 }
 
 /** Count tasks recursively */

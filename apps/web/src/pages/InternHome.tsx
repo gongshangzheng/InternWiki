@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { FileText, ChevronRight } from 'lucide-react'
-import { getInternBySlug, getInternReports, getProjectsByIntern, countTasks, getProjectTasks } from '@/content/loader'
+import { getInternBySlug, getInternReports, getProjectsByIntern } from '@/content/loader'
 import { MarkdownView } from '@/components/MarkdownView'
 import { stripMarkdown } from '@/lib/markdown'
 
@@ -156,35 +156,19 @@ export function InternHome() {
         <div>
           <h2 className="lo-section-title mb-4">项目</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {projects.map((p) => {
-              const tasks = getProjectTasks(internSlug, p.slug ?? '')
-              const stats = tasks ? countTasks(tasks.tasks) : { total: 0, completed: 0 }
-              const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0
-              return (
-                <Link
-                  key={`${p.intern}-${p.slug}`}
-                  to={`/interns/${internSlug}/projects/${p.slug}`}
-                  className="lo-card p-4 transition-colors hover:border-primary/40"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-heading">{p.title}</span>
-                    <span className="rounded bg-muted px-2 py-0.5 text-[10px] text-dim">{p.status}</span>
-                  </div>
-                  {p.summary && <p className="mt-1 text-xs text-dim">{p.summary}</p>}
-                  {stats.total > 0 && (
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between text-[10px] text-dim">
-                        <span>{stats.completed}/{stats.total}</span>
-                        <span>{pct}%</span>
-                      </div>
-                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-                      </div>
-                    </div>
-                  )}
-                </Link>
-              )
-            })}
+            {projects.map((p) => (
+              <Link
+                key={`${p.intern}-${p.slug}`}
+                to={`/interns/${internSlug}/projects`}
+                className="lo-card p-4 transition-colors hover:border-primary/40"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-heading">{p.title}</span>
+                  <span className="rounded bg-muted px-2 py-0.5 text-[10px] text-dim">{p.status}</span>
+                </div>
+                {p.summary && <p className="mt-1 text-xs text-dim">{p.summary}</p>}
+              </Link>
+            ))}
           </div>
         </div>
       )}

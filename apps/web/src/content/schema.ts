@@ -20,7 +20,7 @@ export type ReportMeta = z.infer<typeof reportMetaSchema>
 
 // ── Task types ───────────────────────────────────────────────
 
-export type TaskStatus = 'planned' | 'active' | 'completed' | 'paused'
+export type TaskStatus = 'planned' | 'active' | 'completed' | 'paused' | 'blocked'
 
 export interface RecurringConfig {
   pattern: 'daily' | 'weekly' | 'every-N-days'
@@ -32,6 +32,7 @@ export interface RecurringConfig {
   activeFrom?: string
   activeUntil?: string | null
   excludeDates?: string[]
+  reportLevels?: string[]
 }
 
 export interface TaskNode {
@@ -46,6 +47,10 @@ export interface TaskNode {
   endTime?: string
   location?: string
   category?: string
+  assignee?: string
+  notePath?: string
+  tags?: string[]
+  blockedBy?: string[]
   children: TaskNode[]
 }
 

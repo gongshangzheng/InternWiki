@@ -13,7 +13,7 @@ import {
   DocsList,
   DocsDetail,
 } from '@/pages/ReportPages'
-import { ProjectsPage, ProjectDetailPage } from '@/pages/Projects'
+import { ProjectsPage } from '@/pages/Projects'
 import { SharedList, SharedDetail } from '@/pages/Shared'
 
 // ── Layout ──────────────────────────────────────────────────
@@ -150,9 +150,9 @@ export default function App() {
           <Route path="/interns/:name/docs" element={<DocsList />} />
           <Route path="/interns/:name/docs/:slug" element={<DocsDetail />} />
 
-          {/* Projects */}
+          {/* Projects (single page with hash-based tabs) */}
           <Route path="/interns/:name/projects" element={<ProjectsPage />} />
-          <Route path="/interns/:name/projects/:slug" element={<ProjectDetailPage />} />
+          <Route path="/interns/:name/projects/:slug" element={<ProjectsPage />} />
 
           {/* Shared */}
           <Route path="/shared" element={<SharedList />} />

@@ -43,10 +43,17 @@ pnpm setting set-default --intern alice
 
 ### 分支策略
 
-1. **在自己的分支上工作**：`intern-你的名字`
-2. 定期从 main 拉取最新代码，避免冲突
-3. 内容稳定后合并到 main，push 到 main 自动触发 GitHub Pages 部署
-4. `base` 分支保存基础样式快照，作为参考基线，不用于日常开发或部署
+| 分支 | 用途 | push 方式 |
+|------|------|---------|
+| `main` | 生产分支，触发部署 | 仅 PR 合并，禁止直接 push |
+| `base` | 基础样式快照 | 仅管理员 |
+| `intern-{名字}` | 个人开发 | 直接 push |
+
+**所有修改（框架代码 + 内容）都先提交到个人分支，再通过 PR 合并到 main。**
+
+1. 在 `intern-{名字}` 分支上开发（日报、框架代码、样式等）
+2. 定期从 main 同步：`git merge origin/main`
+3. 准备发布时，在 GitHub 创建 PR 合并到 main，自动触发部署
 
 ### 提交信息规范
 

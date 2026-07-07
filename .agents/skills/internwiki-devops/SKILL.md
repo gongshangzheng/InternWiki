@@ -34,28 +34,45 @@ Base path 为 `/InternWiki/`，所有 public 下的资源 URL 都需要加这个
 
 ## Git 分支工作流
 
-**重要：每个实习生必须在自己的分支上工作，不要直接提交到 main。**
+**重要：所有修改（包括框架代码和内容）都必须先提交到个人分支，通过 PR 合并到 main。严禁直接 push 到 main。**
+
+### 分支说明
+
+| 分支 | 用途 | 谁可以 push |
+|------|------|------------|
+| `main` | 生产分支，push 触发 GitHub Pages 部署 | 仅通过 PR 合并，禁止直接 push |
+| `base` | 基础样式快照，参考基线 | 仅管理员，不用于日常开发 |
+| `intern-{名字}` | 个人开发分支 | 对应实习生 |
+
+### 工作流程
 
 ```bash
 # 1. 切到 main 拉最新代码
 git checkout main
 git pull origin main
 
-# 2. 创建你的分支（命名规则：intern-你的英文名）
-git checkout -b intern-zhangsan
-git push -u origin intern-zhangsan
+# 2. 切到你的分支（首次创建：git checkout -b intern-zhangsan）
+git checkout intern-zhangsan
 
-# 3. 所有日报、周报、文档、任务修改都提交到你的分支
+# 3. 所有修改都提交到你的分支（日报、框架代码、样式等）
 git add .
 git commit -m "日报 2026-07-07"
 git push
 
-# 4. 定期从 main 拉取最新代码，避免冲突
+# 4. 定期从 main 同步最新代码
 git fetch origin
-git rebase origin/main  # 或 merge
+git merge origin/main  # 或 rebase
 
-# 5. 内容稳定后可以提 PR 合并到 main
+# 5. 内容稳定后，在 GitHub 上创建 PR：intern-zhangsan → main
+#    PR 合并后自动触发部署
 ```
+
+### main 分支保护规则
+
+在 GitHub 仓库 Settings → Branches → Branch protection rules 中配置：
+- **Require a pull request before merging** — 禁止直接 push 到 main
+- **Require approvals** (至少 1 人) — 代码审查
+- **Require status checks to pass** — CI 通过后才可合并
 
 ### 分支命名规则
 

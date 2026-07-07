@@ -1,6 +1,6 @@
 import { Routes, Route, NavLink, Link, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { Sun, Moon, Search } from 'lucide-react'
+import { useEffect, useState, lazy, Suspense } from 'react'
+import { Sun, Moon, Search, HelpCircle } from 'lucide-react'
 import { getAllInterns } from '@/content/loader'
 import { useTheme } from '@/hooks/useTheme'
 import { SearchModal } from '@/components/SearchModal'
@@ -16,12 +16,14 @@ import {
   DocsList,
   DocsDetail,
 } from '@/pages/ReportPages'
-import { ProjectsPage } from '@/pages/Projects'
-import { SharedList, SharedDetail } from '@/pages/Shared'
-import { HabitsPage } from '@/pages/Habits'
-import { CalendarPage } from '@/pages/Calendar'
-import { GuidePage } from '@/pages/Guide'
-import { HelpCircle } from 'lucide-react'
+
+// Lazy-loaded pages (heavy dependencies, not needed on first paint)
+const ProjectsPage = lazy(() => import('@/pages/Projects').then(m => ({ default: m.ProjectsPage })))
+const SharedList = lazy(() => import('@/pages/Shared').then(m => ({ default: m.SharedList })))
+const SharedDetail = lazy(() => import('@/pages/Shared').then(m => ({ default: m.SharedDetail })))
+const HabitsPage = lazy(() => import('@/pages/Habits').then(m => ({ default: m.HabitsPage })))
+const CalendarPage = lazy(() => import('@/pages/Calendar').then(m => ({ default: m.CalendarPage })))
+const GuidePage = lazy(() => import('@/pages/Guide').then(m => ({ default: m.GuidePage })))
 
 // ── Layout ──────────────────────────────────────────────────
 
@@ -181,6 +183,7 @@ export default function App() {
     <>
       <ScrollToTop />
       <Layout>
+        <Suspense fallback={<div className="py-16 text-center text-sm text-dim">加载中…</div>}>
         <Routes>
           {/* Home */}
           <Route path="/" element={<Home />} />
@@ -235,6 +238,7 @@ export default function App() {
             }
           />
         </Routes>
+        </Suspense>
       </Layout>
     </>
   )

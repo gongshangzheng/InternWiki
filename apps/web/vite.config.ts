@@ -24,5 +24,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('@fullcalendar')) return 'vendor-fullcalendar'
+          if (id.includes('react-syntax-highlighter') || id.includes('refractor') || id.includes('prismjs')) return 'vendor-syntax-highlighter'
+          if (id.includes('react-markdown') || id.includes('remark-gfm') || id.includes('rehype-raw') || id.includes('micromark') || id.includes('unified')) return 'vendor-markdown'
+        },
+      },
+    },
   },
 })

@@ -1,7 +1,6 @@
 ---
 name: 汤问
 slug: tangwen
-team: 钉钉 · 数字人
 role: 数字人方向实习生
 startDate: 2026-06-01
 ---
@@ -20,25 +19,3 @@ startDate: 2026-06-01
 ## 联系方式
 
 - GitHub: @tangwen
----
-name: 汤问
-slug: tangwen
-team: AI组
-role: AI实习生
-startDate: 2026-07-07
----
-
-## 自我介绍
-
-汤问，AI实习生。
-
-## 技术栈
-
-- **语言**: 
-- **框架**: 
-- **工具**: 
-
-## 联系方式
-
-- GitHub: 
-- Email: 

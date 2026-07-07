@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "pnpm --filter @internwiki/web dev",
     "build": "pnpm --filter @internwiki/web build",
+    "build:app": "pnpm --filter @internwiki/web build:app",
     "preview": "pnpm --filter @internwiki/web preview",
     "lint": "pnpm -r --parallel run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,md,json,css}\"",

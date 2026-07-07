@@ -46,30 +46,10 @@ jobs:
         if: steps.dep-cache.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile
 
-      # Only rebuild Velite content when content files changed
-      - name: Check content changes
-        id: content-check
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          elif [ -n "${{ github.event.before }}" ] && git diff --name-only ${{ github.event.before }}..HEAD 2>/dev/null | grep -qE '^apps/web/content/'; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # Cache Velite output so content-only changes don't require rebuild
-      - name: Cache Velite output
-        uses: actions/cache@v4
-        with:
-          path: apps/web/src/content/.velite
-          key: velite-${{ hashFiles('apps/web/content/**/*.md') }}
-
       - name: Build content
-        if: steps.content-check.outputs.changed == 'true'
         run: pnpm content:build
 
-      - name: Build app (skip velite, reuse cached output)
+      - name: Build app
         run: pnpm build:app
 
       - name: Setup Pages

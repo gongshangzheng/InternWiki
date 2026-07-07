@@ -1,0 +1,218 @@
+import {
+  interns,
+  daily,
+  weekly,
+  monthly,
+  docs,
+  shared,
+  projects,
+  type interns as Interns,
+  type daily as Daily,
+  type weekly as Weekly,
+  type monthly as Monthly,
+  type docs as Docs,
+  type shared as Shared,
+  type projects as Projects,
+} from './.velite'
+import type { TaskTree, TaskNode, TaskStatus } from './schema'
+
+export type { Interns, Daily, Weekly, Monthly, Docs, Shared, Projects }
+export type { TaskTree, TaskNode, TaskStatus }
+
+// ── Sorting helpers ──────────────────────────────────────────
+
+const byDateDesc = <T extends { date?: string | undefined }>(a: T, b: T) => {
+  const da = a.date ?? ''
+  const db = b.date ?? ''
+  return db.localeCompare(da)
+}
+
+const byStartDateDesc = <T extends { startDate?: string | undefined }>(a: T, b: T) => {
+  const da = a.startDate ?? ''
+  const db = b.startDate ?? ''
+  return db.localeCompare(da)
+}
+
+const findBySlug = <T extends { slug?: string }>(items: readonly T[], slug: string) =>
+  items.find((it) => it.slug === slug)
+
+// ── Interns ──────────────────────────────────────────────────
+
+export const getAllInterns = (): Interns[] => [...interns].sort((a, b) =>
+  (a.startDate ?? '').localeCompare(b.startDate ?? ''),
+)
+
+export const getInternBySlug = (slug: string): Interns | undefined =>
+  findBySlug(interns, slug)
+
+// ── Reports (multi-intern: filter by intern slug) ────────────
+
+export const getAllDaily = (): Daily[] => [...daily].sort(byDateDesc)
+export const getDailyBySlug = (slug: string, intern?: string): Daily | undefined =>
+  daily.find((it) => it.slug === slug && (!intern || it.intern === intern))
+
+export const getAllWeekly = (): Weekly[] => [...weekly].sort(byDateDesc)
+export const getWeeklyBySlug = (slug: string, intern?: string): Weekly | undefined =>
+  weekly.find((it) => it.slug === slug && (!intern || it.intern === intern))
+
+export const getAllMonthly = (): Monthly[] => [...monthly].sort(byDateDesc)
+export const getMonthlyBySlug = (slug: string, intern?: string): Monthly | undefined =>
+  monthly.find((it) => it.slug === slug && (!intern || it.intern === intern))
+
+export const getAllDocs = (): Docs[] => [...docs].sort(byDateDesc)
+export const getDocBySlug = (slug: string, intern?: string): Docs | undefined =>
+  docs.find((it) => it.slug === slug && (!intern || it.intern === intern))
+
+export const getAllShared = (): Shared[] => [...shared].sort(byDateDesc)
+export const getSharedBySlug = (slug: string): Shared | undefined =>
+  findBySlug(shared, slug)
+
+/** Get reports for a specific intern (daily + weekly + monthly + docs) */
+export function getInternReports(internSlug: string) {
+  return {
+    daily: daily.filter((d) => d.intern === internSlug).sort(byDateDesc),
+    weekly: weekly.filter((w) => w.intern === internSlug).sort(byDateDesc),
+    monthly: monthly.filter((m) => m.intern === internSlug).sort(byDateDesc),
+    docs: docs.filter((d) => d.intern === internSlug).sort(byDateDesc),
+  }
+}
+
+// ── Projects ─────────────────────────────────────────────────
+
+export const getAllProjects = (): Projects[] => [...projects].sort(byStartDateDesc)
+
+export function getProjectsByIntern(internSlug: string): Projects[] {
+  return projects.filter((p) => p.intern === internSlug).sort(byStartDateDesc)
+}
+
+// ── Task Trees ───────────────────────────────────────────────
+// Task trees live alongside project READMEs in
+// content/interns/{name}/projects/{slug}/tasks.json.
+// We use Vite's import.meta.glob to load them at build time.
+
+const taskModules = import.meta.glob<{ default: TaskTree }>(
+  '/apps/web/content/interns/*/projects/*/tasks.json',
+  { eager: true, import: 'default' },
+)
+
+// Build a lookup: `${intern}/${slug}` → TaskTree
+const taskTreeMap = new Map<string, TaskTree>()
+for (const [path, mod] of Object.entries(taskModules)) {
+  const parts = path.split('/')
+  const internIdx = parts.indexOf('interns')
+  const intern = internIdx >= 0 ? parts[internIdx + 1] : ''
+  const projectsIdx = parts.indexOf('projects')
+  const slug = projectsIdx >= 0 ? parts[projectsIdx + 1] : ''
+  if (intern && slug) {
+    taskTreeMap.set(`${intern}/${slug}`, mod as unknown as TaskTree)
+  }
+}
+
+/** Cascade completion: if all children are completed, mark parent as completed */
+function cascadeStatus(tasks: TaskNode[]): TaskNode[] {
+  return tasks.map((t) => {
+    if (t.children.length === 0) return t
+    const children = cascadeStatus(t.children)
+    const allCompleted = children.every((c) => c.status === 'completed')
+    return {
+      ...t,
+      children,
+      status: allCompleted ? ('completed' as TaskStatus) : t.status,
+    }
+  })
+}
+
+export function getProjectTasks(internSlug: string, projectSlug: string): TaskTree | null {
+  const raw = taskTreeMap.get(`${internSlug}/${projectSlug}`)
+  if (!raw) return null
+  return { ...raw, tasks: cascadeStatus(raw.tasks) }
+}
+
+/** Get all task trees for an intern */
+export function getInternTaskTrees(internSlug: string): Array<TaskTree & { projectSlug: string }> {
+  const result: Array<TaskTree & { projectSlug: string }> = []
+  for (const [key, tree] of taskTreeMap) {
+    if (key.startsWith(`${internSlug}/`)) {
+      const slug = key.split('/')[1]
+      result.push({
+        ...tree,
+        tasks: cascadeStatus(tree.tasks),
+        projectSlug: slug,
+      })
+    }
+  }
+  return result
+}
+
+/** Count tasks recursively */
+export function countTasks(tasks: TaskNode[]): { total: number; completed: number } {
+  let total = 0
+  let completed = 0
+  for (const t of tasks) {
+    total++
+    if (t.status === 'completed') completed++
+    if (t.children.length > 0) {
+      const sub = countTasks(t.children)
+      total += sub.total
+      completed += sub.completed
+    }
+  }
+  return { total, completed }
+}
+
+/** Flatten all leaf tasks (any status, any date) */
+export function flattenAllLeafTasks(
+  tasks: TaskNode[],
+  projectSlug: string,
+): Array<TaskNode & { projectSlug: string }> {
+  const result: Array<TaskNode & { projectSlug: string }> = []
+  for (const t of tasks) {
+    if (t.children.length === 0) {
+      result.push({ ...t, projectSlug })
+    } else {
+      result.push(...flattenAllLeafTasks(t.children, projectSlug))
+    }
+  }
+  return result
+}
+
+/** Flatten dated leaf tasks for calendar display */
+export function flattenDatedTasks(
+  tasks: TaskNode[],
+  projectSlug: string,
+): Array<TaskNode & { projectSlug: string }> {
+  const result: Array<TaskNode & { projectSlug: string }> = []
+  for (const t of tasks) {
+    if (t.startDate && t.children.length === 0) result.push({ ...t, projectSlug })
+    if (t.children.length > 0) result.push(...flattenDatedTasks(t.children, projectSlug))
+  }
+  return result
+}
+
+/** Flatten undated leaf tasks (no startDate, not completed) */
+export function flattenUndatedTasks(
+  tasks: TaskNode[],
+  projectSlug: string,
+): Array<TaskNode & { projectSlug: string }> {
+  const result: Array<TaskNode & { projectSlug: string }> = []
+  for (const t of tasks) {
+    if (!t.startDate && t.status !== 'completed' && t.children.length === 0) {
+      result.push({ ...t, projectSlug })
+    }
+    if (t.children.length > 0) result.push(...flattenUndatedTasks(t.children, projectSlug))
+  }
+  return result
+}
+
+/** Find all recurring tasks in a tree */
+export function findRecurringTasks(
+  tasks: TaskNode[],
+  projectSlug: string,
+): Array<TaskNode & { projectSlug: string }> {
+  const result: Array<TaskNode & { projectSlug: string }> = []
+  for (const t of tasks) {
+    if (t.recurring) result.push({ ...t, projectSlug })
+    if (t.children.length > 0) result.push(...findRecurringTasks(t.children, projectSlug))
+  }
+  return result
+}

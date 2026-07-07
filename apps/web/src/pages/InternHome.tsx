@@ -1,6 +1,31 @@
 import { useParams, Link } from 'react-router-dom'
-import { getInternBySlug, getInternReports, getProjectsByIntern } from '@/content/loader'
+import { FileText, ChevronRight } from 'lucide-react'
+import { getInternBySlug, getInternReports, getProjectsByIntern, countTasks, getProjectTasks } from '@/content/loader'
 import { MarkdownView } from '@/components/MarkdownView'
+import { stripMarkdown } from '@/lib/markdown'
+
+type RecentItem = {
+  slug: string
+  title: string
+  date?: string
+  summary?: string
+  type: 'daily' | 'weekly' | 'monthly' | 'docs'
+  to: string
+}
+
+const TYPE_LABELS: Record<RecentItem['type'], string> = {
+  daily: '日报',
+  weekly: '周报',
+  monthly: '月报',
+  docs: '文档',
+}
+
+const TYPE_COLORS: Record<RecentItem['type'], string> = {
+  daily: 'bg-primary/10 text-primary',
+  weekly: 'bg-blue-500/10 text-blue-500',
+  monthly: 'bg-amber-500/10 text-amber-500',
+  docs: 'bg-violet-500/10 text-violet-500',
+}
 
 export function InternHome() {
   const { name } = useParams<{ name: string }>()
@@ -17,8 +42,17 @@ export function InternHome() {
     )
   }
 
-  const reports = getInternReports(intern.slug ?? '')
-  const projects = getProjectsByIntern(intern.slug ?? '')
+  const internSlug = intern.slug ?? ''
+  const reports = getInternReports(internSlug)
+  const projects = getProjectsByIntern(internSlug)
+
+  // Collect recent reports across all types, sorted by date desc
+  const recentItems: RecentItem[] = [
+    ...reports.daily.map((r) => ({ slug: r.slug, title: r.title, date: r.date, summary: r.summary, type: 'daily' as const, to: `/interns/${internSlug}/daily/${r.slug}` })),
+    ...reports.weekly.map((r) => ({ slug: r.slug, title: r.title, date: r.date, summary: r.summary, type: 'weekly' as const, to: `/interns/${internSlug}/weekly/${r.slug}` })),
+    ...reports.monthly.map((r) => ({ slug: r.slug, title: r.title, date: r.date, summary: r.summary, type: 'monthly' as const, to: `/interns/${internSlug}/monthly/${r.slug}` })),
+    ...reports.docs.map((r) => ({ slug: r.slug, title: r.title, date: r.date, summary: r.summary, type: 'docs' as const, to: `/interns/${internSlug}/docs/${r.slug}` })),
+  ].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
 
   return (
     <section className="space-y-6">
@@ -64,57 +98,93 @@ export function InternHome() {
       </div>
 
       {/* Quick links */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Link to={`/interns/${intern.slug}/daily`} className="lo-card p-3 text-center transition-colors hover:border-primary/40">
-          <div className="text-sm font-medium text-heading">日报</div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Link to={`/interns/${internSlug}/daily`} className="lo-card flex flex-col items-center gap-1 p-3 transition-colors hover:border-primary/40">
+          <FileText className="h-4 w-4 text-dim" />
+          <span className="text-sm font-medium text-heading">日报</span>
+          <span className="text-[10px] text-dim">{reports.daily.length} 篇</span>
         </Link>
-        <Link to={`/interns/${intern.slug}/weekly`} className="lo-card p-3 text-center transition-colors hover:border-primary/40">
-          <div className="text-sm font-medium text-heading">周报</div>
+        <Link to={`/interns/${internSlug}/weekly`} className="lo-card flex flex-col items-center gap-1 p-3 transition-colors hover:border-primary/40">
+          <FileText className="h-4 w-4 text-dim" />
+          <span className="text-sm font-medium text-heading">周报</span>
+          <span className="text-[10px] text-dim">{reports.weekly.length} 篇</span>
         </Link>
-        <Link to={`/interns/${intern.slug}/monthly`} className="lo-card p-3 text-center transition-colors hover:border-primary/40">
-          <div className="text-sm font-medium text-heading">月报</div>
+        <Link to={`/interns/${internSlug}/monthly`} className="lo-card flex flex-col items-center gap-1 p-3 transition-colors hover:border-primary/40">
+          <FileText className="h-4 w-4 text-dim" />
+          <span className="text-sm font-medium text-heading">月报</span>
+          <span className="text-[10px] text-dim">{reports.monthly.length} 篇</span>
         </Link>
-        <Link to={`/interns/${intern.slug}/docs`} className="lo-card p-3 text-center transition-colors hover:border-primary/40">
-          <div className="text-sm font-medium text-heading">文档</div>
+        <Link to={`/interns/${internSlug}/docs`} className="lo-card flex flex-col items-center gap-1 p-3 transition-colors hover:border-primary/40">
+          <FileText className="h-4 w-4 text-dim" />
+          <span className="text-sm font-medium text-heading">文档</span>
+          <span className="text-[10px] text-dim">{reports.docs.length} 篇</span>
         </Link>
       </div>
 
-      {/* Recent reports */}
-      <div>
-        <h2 className="lo-section-title mb-4">最近报告</h2>
-        <div className="space-y-2">
-          {reports.daily.slice(0, 5).map((r) => (
-            <Link
-              key={`${r.intern}-${r.slug}`}
-              to={`/interns/${intern.slug}/daily/${r.slug}`}
-              className="lo-card flex items-center gap-3 p-3 transition-colors hover:border-primary/40"
-            >
-              <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">日报</span>
-              <span className="flex-1 truncate text-sm text-body">{r.summary ?? r.title}</span>
-              <span className="text-xs text-dim">{r.date}</span>
-            </Link>
-          ))}
+      {/* Recent reports — mixed types */}
+      {recentItems.length > 0 && (
+        <div>
+          <h2 className="lo-section-title mb-4">最近报告</h2>
+          <div className="space-y-2">
+            {recentItems.slice(0, 8).map((item) => {
+              const preview = item.summary ? stripMarkdown(item.summary) : item.title
+              return (
+                <Link
+                  key={`${item.type}-${item.slug}`}
+                  to={item.to}
+                  className="lo-card group flex items-start gap-3 p-3 transition-colors hover:border-primary/40"
+                >
+                  <span className={`rounded px-2 py-0.5 text-[10px] font-medium ${TYPE_COLORS[item.type]}`}>
+                    {TYPE_LABELS[item.type]}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <span className="truncate text-sm text-body group-hover:text-primary">{preview}</span>
+                  </div>
+                  {item.date && (
+                    <span className="flex-shrink-0 font-mono text-[11px] text-dim">{item.date.slice(0, 10)}</span>
+                  )}
+                  <ChevronRight className="h-4 w-4 flex-shrink-0 text-placeholder group-hover:text-primary" />
+                </Link>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Projects */}
       {projects.length > 0 && (
         <div>
           <h2 className="lo-section-title mb-4">项目</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {projects.map((p) => (
-              <Link
-                key={`${p.intern}-${p.slug}`}
-                to={`/interns/${intern.slug}/projects/${p.slug}`}
-                className="lo-card p-3 transition-colors hover:border-primary/40"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-heading">{p.title}</span>
-                  <span className="text-xs text-dim">{p.status}</span>
-                </div>
-                {p.summary && <p className="mt-1 text-xs text-dim">{p.summary}</p>}
-              </Link>
-            ))}
+            {projects.map((p) => {
+              const tasks = getProjectTasks(internSlug, p.slug ?? '')
+              const stats = tasks ? countTasks(tasks.tasks) : { total: 0, completed: 0 }
+              const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0
+              return (
+                <Link
+                  key={`${p.intern}-${p.slug}`}
+                  to={`/interns/${internSlug}/projects/${p.slug}`}
+                  className="lo-card p-4 transition-colors hover:border-primary/40"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-heading">{p.title}</span>
+                    <span className="rounded bg-muted px-2 py-0.5 text-[10px] text-dim">{p.status}</span>
+                  </div>
+                  {p.summary && <p className="mt-1 text-xs text-dim">{p.summary}</p>}
+                  {stats.total > 0 && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-[10px] text-dim">
+                        <span>{stats.completed}/{stats.total}</span>
+                        <span>{pct}%</span>
+                      </div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
+                        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  )}
+                </Link>
+              )
+            })}
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useParams, Navigate } from 'react-router-dom'
 import { ReportList, type ReportListItem } from '@/components/ReportList'
 import { ReportDetail, type ReportDetailItem } from '@/components/ReportDetail'
+import { RelatedReports } from '@/components/RelatedReports'
 import { getInternBySlug, getInternReports } from '@/content/loader'
 import type { Daily, Weekly, Monthly, Docs } from '@/content/loader'
 
@@ -105,12 +106,17 @@ export function ReportDetailPage({ type }: { type: CollectionKey }) {
     : undefined
 
   return (
-    <ReportDetail
-      item={item}
-      backTo={cfg.basePath(internSlug)}
-      backLabel={`${cfg.label}列表`}
-      notFoundTitle={`未找到${cfg.label}`}
-    />
+    <>
+      <ReportDetail
+        item={item}
+        backTo={cfg.basePath(internSlug)}
+        backLabel={`${cfg.label}列表`}
+        notFoundTitle={`未找到${cfg.label}`}
+      />
+      {item?.date && (
+        <RelatedReports type={type} intern={internSlug} slug={item.slug} date={item.date} />
+      )}
+    </>
   )
 }
 

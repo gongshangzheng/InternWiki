@@ -17,6 +17,8 @@ import {
 } from '@/pages/ReportPages'
 import { ProjectsPage } from '@/pages/Projects'
 import { SharedList, SharedDetail } from '@/pages/Shared'
+import { HabitsPage } from '@/pages/Habits'
+import { CalendarPage } from '@/pages/Calendar'
 
 // ── Layout ──────────────────────────────────────────────────
 
@@ -78,6 +80,7 @@ function NavBar() {
         )}
 
         <div className="ml-auto flex items-center gap-1">
+          <Link to="/calendar" className="rounded-md px-2.5 py-1 text-xs font-medium text-dim transition-colors hover:text-heading">日历</Link>
           <ThemeToggle />
           <span className="text-[10px] uppercase tracking-widest text-placeholder">v0.1</span>
         </div>
@@ -93,6 +96,7 @@ function NavBar() {
             <SubNav to={`/interns/${activeIntern.slug}/monthly`} label="月报" />
             <SubNav to={`/interns/${activeIntern.slug}/docs`} label="文档" />
             <SubNav to={`/interns/${activeIntern.slug}/projects`} label="项目" />
+            <SubNav to={`/interns/${activeIntern.slug}/habits`} label="习惯" />
           </div>
         </div>
       )}
@@ -167,9 +171,15 @@ export default function App() {
           <Route path="/interns/:name/docs" element={<DocsList />} />
           <Route path="/interns/:name/docs/:slug" element={<DocsDetail />} />
 
+          {/* Habits */}
+          <Route path="/interns/:name/habits" element={<HabitsPage />} />
+
           {/* Projects (single page with hash-based tabs) */}
           <Route path="/interns/:name/projects" element={<ProjectsPage />} />
           <Route path="/interns/:name/projects/:slug" element={<ProjectsPage />} />
+
+          {/* Calendar */}
+          <Route path="/calendar" element={<CalendarPage />} />
 
           {/* Shared */}
           <Route path="/shared" element={<SharedList />} />

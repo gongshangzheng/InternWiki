@@ -222,9 +222,9 @@ export function InternHome() {
   const projects = getProjectsByIntern(internSlug)
 
   const recentItems: RecentItem[] = [
-    ...reports.daily.map((r) => ({ slug: r.slug, title: r.title, date: r.date, summary: r.summary, type: 'daily' as const, to: `/interns/${internSlug}/daily/${r.slug}` })),
-    ...reports.weekly.map((r) => ({ slug: r.slug, title: r.title, date: r.date, summary: r.summary, type: 'weekly' as const, to: `/interns/${internSlug}/weekly/${r.slug}` })),
-    ...reports.monthly.map((r) => ({ slug: r.slug, title: r.title, date: r.date, summary: r.summary, type: 'monthly' as const, to: `/interns/${internSlug}/monthly/${r.slug}` })),
+    ...reports.daily.map((r) => ({ slug: r.slug, title: r.title, date: r.date, summary: r.summary, type: 'daily' as const, to: `/interns/${internSlug}/report/daily/${r.slug}` })),
+    ...reports.weekly.map((r) => ({ slug: r.slug, title: r.title, date: r.date, summary: r.summary, type: 'weekly' as const, to: `/interns/${internSlug}/report/weekly/${r.slug}` })),
+    ...reports.monthly.map((r) => ({ slug: r.slug, title: r.title, date: r.date, summary: r.summary, type: 'monthly' as const, to: `/interns/${internSlug}/report/monthly/${r.slug}` })),
     ...reports.docs.map((r) => ({ slug: r.slug, title: r.title, date: r.date, summary: r.summary, type: 'docs' as const, to: `/interns/${internSlug}/docs/${r.slug}` })),
   ].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
 
@@ -280,17 +280,17 @@ export function InternHome() {
 
       {/* Quick links */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <Link to={`/interns/${internSlug}/daily`} className="lo-card flex flex-col items-center gap-1 p-3 transition-colors hover:border-primary/40">
+        <Link to={`/interns/${internSlug}/report/daily`} className="lo-card flex flex-col items-center gap-1 p-3 transition-colors hover:border-primary/40">
           <FileText className="h-4 w-4 text-dim" />
           <span className="text-sm font-medium text-heading">日报</span>
           <span className="text-[10px] text-dim">{reports.daily.length} 篇</span>
         </Link>
-        <Link to={`/interns/${internSlug}/weekly`} className="lo-card flex flex-col items-center gap-1 p-3 transition-colors hover:border-primary/40">
+        <Link to={`/interns/${internSlug}/report/weekly`} className="lo-card flex flex-col items-center gap-1 p-3 transition-colors hover:border-primary/40">
           <FileText className="h-4 w-4 text-dim" />
           <span className="text-sm font-medium text-heading">周报</span>
           <span className="text-[10px] text-dim">{reports.weekly.length} 篇</span>
         </Link>
-        <Link to={`/interns/${internSlug}/monthly`} className="lo-card flex flex-col items-center gap-1 p-3 transition-colors hover:border-primary/40">
+        <Link to={`/interns/${internSlug}/report/monthly`} className="lo-card flex flex-col items-center gap-1 p-3 transition-colors hover:border-primary/40">
           <FileText className="h-4 w-4 text-dim" />
           <span className="text-sm font-medium text-heading">月报</span>
           <span className="text-[10px] text-dim">{reports.monthly.length} 篇</span>

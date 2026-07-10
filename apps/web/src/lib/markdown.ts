@@ -7,6 +7,16 @@ import {
 
 type CollectionKey = 'daily' | 'weekly' | 'monthly' | 'docs'
 
+/** Report types that live under the /report/ path segment */
+const REPORT_ROUTES: CollectionKey[] = ['daily', 'weekly', 'monthly']
+
+/** Build the URL path for a collection route, adding report/ prefix for report types */
+function routePath(route: CollectionKey, slug: string, internSlug?: string): string {
+  const prefix = REPORT_ROUTES.includes(route) ? 'report/' : ''
+  const base = internSlug ? `/interns/${internSlug}/` : '/'
+  return `${base}${prefix}${route}/${slug}`
+}
+
 const ALL_COLLECTIONS: ReadonlyArray<{
   route: CollectionKey
   items: ReadonlyArray<{ slug: string }>
@@ -39,7 +49,7 @@ function findRouteForSlug(slug: string): CollectionKey | null {
  * Rewrite an internal markdown link to a real SPA route.
  *
  * Handles patterns like:
- *   "daily/2026-07-07.md"  -> "/interns/{intern}/daily/2026-07-07"
+ *   "daily/2026-07-07.md"  -> "/interns/{intern}/report/daily/2026-07-07"
  *   "2026-07-07"            -> looks up the slug across collections
  *   "internwiki:project:slug" -> "/interns/{intern}/projects#slug"
  *   "internwiki:task:project/task-id" -> "/interns/{intern}/projects#project?task=task-id"
@@ -90,14 +100,14 @@ export function internalLinkHref(href: string, internSlug?: string): string | nu
   if (dirSlug) {
     const route = dirSlug[1] as CollectionKey
     if (['daily', 'weekly', 'monthly', 'docs'].includes(route)) {
-      return `/${route}/${dirSlug[2]}`
+      return routePath(route, dirSlug[2], internSlug)
     }
   }
 
   // case: bare slug — look it up across all collections
   const route = findRouteForSlug(cleaned)
   if (route) {
-    return `/${route}/${cleaned}`
+    return routePath(route, cleaned, internSlug)
   }
 
   return null

@@ -220,8 +220,9 @@ export function ProjectsPage() {
       {activeProject && (
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           {/* Left sidebar: task tree */}
-          <aside className="space-y-3">
-            <div className="flex items-center gap-2 border-b border-border pb-2">
+          <aside className="flex min-w-0 flex-col lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)]">
+            {/* Header — stays fixed at top of sidebar */}
+            <div className="flex flex-shrink-0 items-center gap-2 border-b border-border pb-2">
               <button
                 onClick={handleBackToReadme}
                 className={cn(
@@ -242,29 +243,32 @@ export function ProjectsPage() {
               </div>
             </div>
 
-            {isLoadingTree ? (
-              <div className="py-8 text-center text-xs text-dim">加载中…</div>
-            ) : activeTree && activeTree.tasks.length > 0 ? (
-              <div className="space-y-0.5">
-                {activeTree.tasks.map((task, i) => (
-                  <TaskTreeNode
-                    key={task.id}
-                    task={task}
-                    depth={0}
-                    isLast={i === activeTree.tasks.length - 1}
-                    parentLines={[]}
-                    projectColor={activeColor}
-                    selectedId={selectedTask?.id ?? null}
-                    onSelect={setSelectedTask}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="py-8 text-center">
-                <GitBranch className="mx-auto h-8 w-8 text-placeholder" />
-                <p className="mt-2 text-xs text-dim">暂无任务树数据。</p>
-              </div>
-            )}
+            {/* Task tree — scrolls independently */}
+            <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden lg:pr-3 lg:pb-3">
+              {isLoadingTree ? (
+                <div className="py-8 text-center text-xs text-dim">加载中…</div>
+              ) : activeTree && activeTree.tasks.length > 0 ? (
+                <div className="space-y-0.5 pt-2">
+                  {activeTree.tasks.map((task, i) => (
+                    <TaskTreeNode
+                      key={task.id}
+                      task={task}
+                      depth={0}
+                      isLast={i === activeTree.tasks.length - 1}
+                      parentLines={[]}
+                      projectColor={activeColor}
+                      selectedId={selectedTask?.id ?? null}
+                      onSelect={setSelectedTask}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center">
+                  <GitBranch className="mx-auto h-8 w-8 text-placeholder" />
+                  <p className="mt-2 text-xs text-dim">暂无任务树数据。</p>
+                </div>
+              )}
+            </div>
           </aside>
 
           {/* Right: project README or task note */}

@@ -78,7 +78,7 @@ function searchAll(query: string): SearchResult[] {
       results.push({
         type: 'daily', title: r.title ?? r.slug, slug: r.slug, date: r.date,
         summary: r.summary, intern: r.intern,
-        to: `/interns/${r.intern}/daily/${r.slug}`, score,
+        to: `/interns/${r.intern}/report/daily/${r.slug}`, score,
       })
     }
   }
@@ -93,7 +93,7 @@ function searchAll(query: string): SearchResult[] {
       results.push({
         type: 'weekly', title: r.title ?? r.slug, slug: r.slug, date: r.date,
         summary: r.summary, intern: r.intern,
-        to: `/interns/${r.intern}/weekly/${r.slug}`, score,
+        to: `/interns/${r.intern}/report/weekly/${r.slug}`, score,
       })
     }
   }
@@ -108,7 +108,7 @@ function searchAll(query: string): SearchResult[] {
       results.push({
         type: 'monthly', title: r.title ?? r.slug, slug: r.slug, date: r.date,
         summary: r.summary, intern: r.intern,
-        to: `/interns/${r.intern}/monthly/${r.slug}`, score,
+        to: `/interns/${r.intern}/report/monthly/${r.slug}`, score,
       })
     }
   }

@@ -23,19 +23,19 @@ const COLLECTION_CONFIG: Record<
   daily: {
     label: '日报',
     description: '每日复盘 — 任务、进展、思考。',
-    basePath: (i) => `/interns/${i}/daily`,
+    basePath: (i) => `/interns/${i}/report/daily`,
     empty: '还没有日报。',
   },
   weekly: {
     label: '周报',
     description: '周计划与周复盘。',
-    basePath: (i) => `/interns/${i}/weekly`,
+    basePath: (i) => `/interns/${i}/report/weekly`,
     empty: '还没有周报。',
   },
   monthly: {
     label: '月报',
     description: '月度总结与下月规划。',
-    basePath: (i) => `/interns/${i}/monthly`,
+    basePath: (i) => `/interns/${i}/report/monthly`,
     empty: '还没有月报。',
   },
   docs: {
@@ -285,6 +285,35 @@ function ReportPage({ type }: { type: CollectionKey }) {
         </aside>
       )}
     </div>
+  )
+}
+
+/** Report index — redirects to first available report type, or shows general empty state */
+export function ReportIndex() {
+  const { name } = useParams<{ name: string }>()
+  const intern = getInternBySlug(name ?? '')
+
+  if (!intern) return <Navigate to="/" replace />
+
+  const internSlug = intern.slug ?? ''
+  const reports = getInternReports(internSlug)
+
+  // Redirect to first report type that has content
+  for (const type of REPORT_TYPES) {
+    if (reports[type].length > 0) {
+      return <Navigate to={COLLECTION_CONFIG[type].basePath(internSlug)} replace />
+    }
+  }
+
+  // No reports at all — show general empty state
+  return (
+    <section className="space-y-4">
+      <header className="space-y-1">
+        <h1 className="lo-section-title">报告</h1>
+        <p className="text-xs text-dim">日报、周报、月报</p>
+      </header>
+      <p className="py-8 text-center text-sm text-dim">还没有报告。</p>
+    </section>
   )
 }
 

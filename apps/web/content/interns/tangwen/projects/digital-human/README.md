@@ -9,7 +9,7 @@ tags:
   - 数字人
   - 生成式AI
   - 实时推理
-summary: 钉钉数字人方向。当前目标为会议面试官数字人，围绕实时数字人、音视频交互与生成式模型落地，参与算法方案调研、工程实现和效果优化。
+summary: 钉钉数字人方向。当前目标为会议面试官数字人，围绕实时数字人、音视频交互与生成式模型落地，参与算法方案调研、工程实现和效果优化。已完成 20+ 篇技术调研、评测框架设计与实现（含 speed run 快速验证、agent skill 封装），当前推进评测框架优化与模型部署测试。
 timeline:
   - date: 2026-06-01
     title: 入职钉钉
@@ -35,6 +35,14 @@ timeline:
     title: 当前任务梳理
     type: progress
     description: 整理出五大并行任务方向：卡通数字人、数字人产品调研、评测框架优化、模型部署测试、conversation 评测数据集制作。
+  - date: 2026-07-09
+    title: 评测框架能力扩展 + FlexAvatar 接入
+    type: progress
+    description: 新增 speed run 快速验证线路，支持端到端跑通并主观检验效果；将评测功能封装为 agent skill，便于快速调用；端到端跑通评测代码全流程，验证各环节可用；修复模型参数覆盖问题并重新下载。基于 UV 实现基准环境 + 微调环境双层管理策略。接入 FlexAvatar（CVPR 2026）模型适配器，支持 pixel3dmm 和 artalk 两种驱动模式；调研 FlexAvatar / HyperGaussians / MATCH / AniGS 四个 3DGS 方法。
+  - date: 2026-07-13
+    title: 下周重点：竞品调研 + 选型确认
+    type: progress
+    description: 启动主流数字人产品调研（实现原理/效果/实时通话/延迟），同步推进选型方案确认，要求自研方案在主观表现和客观指标上不低于竞品。
 ---
 
 ## 项目背景
@@ -74,7 +82,7 @@ timeline:
 - **产业图谱**（系列十）
 - **Demo Gallery**（系列十一）
 - **实时性全景对比**（系列十二）—— GPU 需求到交互延迟
-- **卡通与风格化数字人**（系列十三）
+- **卡通与风格化数字人**（系列十三）—— 跨域卡通重演、风格化共语音生成、细粒度表情数据集、3D 动画质量评估与 RGB 驱动肖像动画，含 ToonTalker / Co-Speech NPR / GenEAva / 4DHumanQA / CapTalk / X-Portrait 等 6 篇论文精读
 - **工程解读**：CyberVerse 实时数字人 Agent、FlashHead Lite 实验、Ultralight-Digital-Human 源码解读、推理 Benchmark 汇总
 
 ### 2. 评测框架（~/code/digital_human）
@@ -111,11 +119,25 @@ src/
 
 **模型适配器**：
 - FlashHead（已接入）
+- FlexAvatar（已接入，CVPR 2026，单图→完整 3D 头部 Avatar）
 - Mock（用于测试）
 - Template（供新模型参考）
 
 **数据集适配器**：
 - TalkVid、Conversation、Long、Base
+
+**Speed Run 模式**：
+- 快速跑通全流程，获取输出结果用于主观效果检验
+- 不追求指标精度，重点加速迭代调试
+
+**Agent Skill 封装**：
+- 将部分评测功能封装为 skill，agents 可快速调用评测模型
+
+**UV 环境管理**：
+- 基准环境（`.venv`）：通过 `pyproject.toml` + `uv.lock` 管理，覆盖大多数模型
+- 微调环境（`.envs/{model}`）：依赖冲突的模型创建增量环境，UV 全局缓存通过 hardlink 共享包
+- 四步决策流程：基准测试 → 调整基准 → git 回退 → 创建微调
+- subprocess wrapper 按优先级解析：`venv_path` > `conda_env` > venv 回退
 
 ## 当前任务
 
@@ -128,10 +150,21 @@ src/
 ### 2. 数字人产品调研
 
 - [ ] 数字人后端 Agent 的设计理念调研
-- [ ] 主流数字人产品形态与技术方案梳理
+- [ ] 主流数字人产品实现原理调研：调研 HeyGen、D-ID、Synthesia、硅基智能、腾讯智影、阿里通义等产品的技术路线（2D整图生成/换唇/3D数字人模型）
+- [ ] 竞品效果与实时通话能力评估：主观效果（画质/唇同步/表情自然度）、是否支持实时通话、端到端延迟，输出竞品对比表
+
+### 2b. 数字人选型方案确认
+
+- [ ] 自研方案与竞品效果对标：将 FlashHead/FlexAvatar 等自研模型与竞品在主观效果和客观指标上对标
+- [ ] 选型决策报告：综合调研和对标数据，输出方案对比矩阵、推荐结论、A10部署可行性和风险分析
 
 ### 3. 评测框架优化
 
+- [x] 新增 speed run 线路：快速跑通项目并获取输出结果，进行主观效果检验
+- [x] 评测功能封装为 agent skill，便于快速调用
+- [x] 跑通评测代码全流程：端到端跑通评测代码的完整流程，验证各环节可用
+- [x] 模型参数重新下载：修复误覆盖的模型参数，恢复正常使用
+- [x] UV 环境管理机制：基准环境 + 微调环境双层策略，env-manager skill + 四步决策流程 + 依赖冲突分析
 - [ ] 人脸 matting 前置处理：PSNR 等指标需先做人脸 matting 再测，否则对 3DGS 等无背景算法不公平
 - [ ] Wave2Lip 唇同步指标异常排查：之前测试 Wave2Lip 唇同步分数最高，结果可疑，需复验
 - [ ] 无参视频质量评测模型调研：除 TOPIQ 外，调研更多无参考（no-reference）视频质量评测模型，补充 TOPIQ-FR 等有参方案的对照

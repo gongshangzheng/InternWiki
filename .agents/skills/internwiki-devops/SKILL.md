@@ -82,7 +82,7 @@ git merge origin/main  # 或 rebase
 ## 开发命令
 
 ```bash
-pnpm dev          # 启动开发服务器 (port 5180, base /InternWiki/)
+pnpm dev          # 启动开发服务器 (port 5183, base /InternWiki/)
 pnpm build        # 构建 (velite build + tsc + vite build)
 pnpm preview      # 预览构建结果
 pnpm content:build  # 仅编译 Velite 内容
@@ -92,7 +92,7 @@ pnpm task         # 任务树 CLI (add/done/list/stats/remove/move)
 pnpm project      # 项目创建 CLI (new)
 ```
 
-- 开发服务器固定端口 **5180**，base 路径 `/InternWiki/`
+- 开发服务器固定端口 **5183**，base 路径 `/InternWiki/`
 - `pnpm dev` 有热重载，修改 Markdown 内容会自动重新编译 Velite
 - `tasks.json` 不经过 Velite，由 Vite 插件直接 serve，修改即时生效
 
@@ -108,6 +108,6 @@ pnpm project      # 项目创建 CLI (new)
 
 1. **修改内容后需重新编译**：运行 `pnpm content:build` 或 `pnpm dev`（热重载）
 2. **tasks.json 不经过 Velite**：由 Vite 插件直接 serve，修改即时生效
-3. **端口 5180**：开发服务器固定端口 5180，base 路径 `/InternWiki/`
+3. **端口 5183**：开发服务器固定端口 5183，base 路径 `/InternWiki/`
 4. **暗/亮模式**：CSS 变量 `:root`（亮色）/`.dark`（暗色）两套，导航栏可切换。修改样式时注意两套都改
 5. **Tailwind v4 @theme**：颜色变量需在 `@theme` 块中注册为 `--color-xxx: var(--color-xxx)` 才能生成 `bg-card` / `text-heading` 等工具类

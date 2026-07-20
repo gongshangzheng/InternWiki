@@ -29,6 +29,7 @@ pnpm-debug.log*
 *.swp
 *.swo
 *~
+.claude/
 
 # Env
 .env

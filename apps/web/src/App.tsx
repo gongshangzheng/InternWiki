@@ -7,6 +7,7 @@ import { SearchModal } from '@/components/SearchModal'
 import { Home } from '@/pages/Home'
 import { InternHome } from '@/pages/InternHome'
 import {
+  ReportIndex,
   DailyList,
   DailyDetail,
   WeeklyList,
@@ -107,7 +108,7 @@ function NavBar({ onSearchOpen }: { onSearchOpen: () => void }) {
         <div className="border-t border-border bg-muted/50">
           <div className="mx-auto flex max-w-7xl items-center gap-0.5 px-4">
             <SubNav to={`/interns/${activeIntern.slug}`} label="概览" end />
-            <SubNav to={`/interns/${activeIntern.slug}/daily`} label="报告" reportActive />
+            <SubNav to={`/interns/${activeIntern.slug}/report`} label="报告" reportActive />
             <SubNav to={`/interns/${activeIntern.slug}/docs`} label="文档" />
             <SubNav to={`/interns/${activeIntern.slug}/projects`} label="项目" />
             <SubNav to={`/interns/${activeIntern.slug}/habits`} label="习惯" />
@@ -127,7 +128,7 @@ function SubNav({ to, label, end, reportActive }: { to: string; label: string; e
         if (reportActive) {
           // Active for any of daily/weekly/monthly routes
           const path = location.pathname
-          const isReport = /\/interns\/[^/]+\/(daily|weekly|monthly)/.test(path)
+          const isReport = /\/interns\/[^/]+\/report/.test(path)
           isActive = isReport
         }
         return `border-b-2 px-3 py-2 text-xs font-medium transition-colors ${
@@ -191,17 +192,14 @@ export default function App() {
           {/* Intern pages */}
           <Route path="/interns/:name" element={<InternHome />} />
 
-          {/* Daily */}
-          <Route path="/interns/:name/daily" element={<DailyList />} />
-          <Route path="/interns/:name/daily/:slug" element={<DailyDetail />} />
-
-          {/* Weekly */}
-          <Route path="/interns/:name/weekly" element={<WeeklyList />} />
-          <Route path="/interns/:name/weekly/:slug" element={<WeeklyDetail />} />
-
-          {/* Monthly */}
-          <Route path="/interns/:name/monthly" element={<MonthlyList />} />
-          <Route path="/interns/:name/monthly/:slug" element={<MonthlyDetail />} />
+          {/* Reports (daily / weekly / monthly) */}
+          <Route path="/interns/:name/report" element={<ReportIndex />} />
+          <Route path="/interns/:name/report/daily" element={<DailyList />} />
+          <Route path="/interns/:name/report/daily/:slug" element={<DailyDetail />} />
+          <Route path="/interns/:name/report/weekly" element={<WeeklyList />} />
+          <Route path="/interns/:name/report/weekly/:slug" element={<WeeklyDetail />} />
+          <Route path="/interns/:name/report/monthly" element={<MonthlyList />} />
+          <Route path="/interns/:name/report/monthly/:slug" element={<MonthlyDetail />} />
 
           {/* Docs */}
           <Route path="/interns/:name/docs" element={<DocsList />} />

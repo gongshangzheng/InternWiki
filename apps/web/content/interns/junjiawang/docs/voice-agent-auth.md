@@ -158,3 +158,4 @@ JWT 是**自包含验签**方案，它的优势是无状态，但代价是：**�
 - [三级配置继承体系与 RAG/MCP 编排](docs/voice-agent-config-inheritance.md) — 同源的「忽略不可信输入」原则
 - [Agent 全生命周期编排引擎](docs/voice-agent-orchestration.md)
 - [事件驱动会话状态机与三层超时兜底](docs/voice-agent-session-lifecycle.md)
+- [前后端契约与协同设计](docs/voice-agent-frontend-backend-contract.md) — 「服务端强制忽略 apikey」与「前端 Customized TTS 要填 API Key」为何不矛盾

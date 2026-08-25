@@ -162,3 +162,5 @@ graph TB
 - [Agent 全生命周期编排引擎](docs/voice-agent-orchestration.md) — 启动侧，以及回收依赖的门面层
 - [三级配置继承体系与 RAG/MCP 编排](docs/voice-agent-config-inheritance.md)
 - [多租户分级鉴权与 WS 短期票](docs/voice-agent-auth.md)
+- [前后端契约与协同设计](docs/voice-agent-frontend-backend-contract.md) — 前端的 500ms 轮询兜底与本篇 30s 扫描是同构设计
+- [前端 · Bad Case 收集与反馈系统](docs/voice-agent-web-badcase.md) — 会话时长上限如何影响前端录音设计

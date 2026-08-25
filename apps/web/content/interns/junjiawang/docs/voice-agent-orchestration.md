@@ -134,3 +134,5 @@ stop 侧读到 `agentUserId` 以 `ai-dh-` 开头，就知道要用数字人专�
 - [VoiceAgent 项目总览](docs/voice-agent-overview.md)
 - [三级配置继承体系与 RAG/MCP 编排](docs/voice-agent-config-inheritance.md) — 编排引擎调用的配置是怎么算出来的
 - [会话状态机与三层超时兜底](docs/voice-agent-session-lifecycle.md) — 启动之后怎么保证被回收
+- [前后端契约与协同设计](docs/voice-agent-frontend-backend-contract.md) — 确认位机制的完整协议
+- [前端 · 数字人视频流接入与实时渲染](docs/voice-agent-web-digital-human.md) — 同一个数字人问题的前端半场

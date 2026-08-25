@@ -161,3 +161,6 @@ MCP 工具的挂载位置**取决于 pipeline 模式**，这是个容易搞错�
 - [VoiceAgent 项目总览](docs/voice-agent-overview.md)
 - [Agent 全生命周期编排引擎](docs/voice-agent-orchestration.md) — 配置算好之后是怎么下发的
 - [多租户分级鉴权与 WS 短期票](docs/voice-agent-auth.md) — apikey / orgId 的可信来源在哪
+- [前后端契约与协同设计](docs/voice-agent-frontend-backend-contract.md) — 浅覆盖契约对前端意味着什么，以及「API Key 该不该忽略」的辨析
+- [前端 · 模块化重构与配置适配层](docs/voice-agent-web-architecture.md) — 同名方法 `buildStartAgentBody` 的前端版
+- [前端 · MCP 工具可视化与 RAG 集成](docs/voice-agent-web-mcp-rag.md) — `/agent/mcp-tools` 与 RAG 开关的消费方

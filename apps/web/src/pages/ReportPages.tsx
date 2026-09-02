@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, FileText } from 'lucide-react'
+import { ChevronLeft, ChevronDown, ChevronRight, FileText, FolderOpen } from 'lucide-react'
 import { MarkdownView } from '@/components/MarkdownView'
 import { RelatedReports } from '@/components/RelatedReports'
 import { getInternBySlug, getInternReports } from '@/content/loader'
@@ -61,8 +62,112 @@ function formatDate(iso?: string): string {
 }
 
 /** Unified report page — wiki layout with sidebar + content + TOC */
+/** docs 集合按子目录分组；slug 含 `/` 的首段即目录名 */
+function groupDocsByDir(collection: ReportItem[]) {
+  const groups = new Map<string, ReportItem[]>()
+  for (const item of collection) {
+    const seg = (item.slug ?? '').split('/')
+    const dir = seg.length > 1 ? seg.slice(0, -1).join('/') : ''
+    if (!groups.has(dir)) groups.set(dir, [])
+    groups.get(dir)!.push(item)
+  }
+  return groups
+}
+
+function DocsSidebar({
+  collection,
+  basePath,
+  currentSlug,
+}: {
+  collection: ReportItem[]
+  basePath: string
+  currentSlug: string
+}) {
+  const groups = groupDocsByDir(collection)
+  const currentDir = currentSlug.includes('/')
+    ? currentSlug.split('/').slice(0, -1).join('/')
+    : ''
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    // 默认全部展开当前文档所在目录，收起其他
+    const init: Record<string, boolean> = {}
+    for (const dir of groups.keys()) init[dir] = dir !== currentDir
+    return init
+  })
+
+  const linkCls = (item: ReportItem) =>
+    `guide-sidebar-link ${item.slug === currentSlug ? 'active' : ''}`
+
+  return (
+    <nav>
+      {[...groups.entries()].map(([dir, items]) => {
+        // 无子目录的文档直接平铺
+        if (!dir) {
+          return items.map((item) => (
+            <SidebarLink key={item.slug} item={item} basePath={basePath} className={linkCls(item)} />
+          ))
+        }
+        const isCollapsed = collapsed[dir] ?? true
+        return (
+          <div key={dir} className="mb-1">
+            <button
+              type="button"
+              onClick={() => setCollapsed((c) => ({ ...c, [dir]: !isCollapsed }))}
+              className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-xs font-semibold text-heading transition-colors hover:bg-muted"
+            >
+              {isCollapsed ? (
+                <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+              )}
+              <FolderOpen className="h-3.5 w-3.5 shrink-0 text-dim" />
+              <span className="truncate">{dir}</span>
+              <span className="ml-auto text-[10px] text-placeholder">{items.length}</span>
+            </button>
+            {!isCollapsed &&
+              items.map((item) => (
+                <SidebarLink
+                  key={item.slug}
+                  item={item}
+                  basePath={basePath}
+                  className={linkCls(item)}
+                  indented
+                />
+              ))}
+          </div>
+        )
+      })}
+    </nav>
+  )
+}
+
+function SidebarLink({
+  item,
+  basePath,
+  className,
+  indented,
+}: {
+  item: ReportItem
+  basePath: string
+  className: string
+  indented?: boolean
+}) {
+  return (
+    <Link to={`${basePath}/${item.slug}`} className={className}>
+      <div className={`truncate ${indented ? 'pl-5' : ''}`}>{item.title}</div>
+      {item.date && (
+        <div className={`mt-0.5 font-mono text-[10px] text-placeholder ${indented ? 'pl-5' : ''}`}>
+          {formatDate(item.date)}
+        </div>
+      )}
+    </Link>
+  )
+}
+
 function ReportPage({ type }: { type: CollectionKey }) {
-  const { name, slug } = useParams<{ name: string; slug: string }>()
+  // docs 路由用 * 通配（slug 含子目录路径），参数在 '*' 键下；其余类型用 :slug
+  const params = useParams<{ name: string; slug: string; '*': string }>()
+  const slug = type === 'docs' ? params['*'] ?? params.slug : params.slug
+  const name = params.name
   const navigate = useNavigate()
   const intern = getInternBySlug(name ?? '')
   const cfg = COLLECTION_CONFIG[type]
@@ -144,22 +249,20 @@ function ReportPage({ type }: { type: CollectionKey }) {
             <FileText className="h-3.5 w-3.5" />
             {cfg.label}
           </div>
-          <nav>
-            {collection.map((item) => (
-              <Link
-                key={item.slug}
-                to={`${basePath}/${item.slug}`}
-                className={`guide-sidebar-link ${item.slug === article.slug ? 'active' : ''}`}
-              >
-                <div className="truncate">{item.title}</div>
-                {item.date && (
-                  <div className="mt-0.5 font-mono text-[10px] text-placeholder">
-                    {formatDate(item.date)}
-                  </div>
-                )}
-              </Link>
-            ))}
-          </nav>
+          {type === 'docs' ? (
+            <DocsSidebar collection={collection} basePath={basePath} currentSlug={article.slug} />
+          ) : (
+            <nav>
+              {collection.map((item) => (
+                <SidebarLink
+                  key={item.slug}
+                  item={item}
+                  basePath={basePath}
+                  className={`guide-sidebar-link ${item.slug === article.slug ? 'active' : ''}`}
+                />
+              ))}
+            </nav>
+          )}
         </div>
       </aside>
 

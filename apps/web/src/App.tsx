@@ -201,9 +201,9 @@ export default function App() {
           <Route path="/interns/:name/report/monthly" element={<MonthlyList />} />
           <Route path="/interns/:name/report/monthly/:slug" element={<MonthlyDetail />} />
 
-          {/* Docs */}
+          {/* Docs (slug 可含子目录路径，用 * 通配) */}
           <Route path="/interns/:name/docs" element={<DocsList />} />
-          <Route path="/interns/:name/docs/:slug" element={<DocsDetail />} />
+          <Route path="/interns/:name/docs/*" element={<DocsDetail />} />
 
           {/* Habits */}
           <Route path="/interns/:name/habits" element={<HabitsPage />} />

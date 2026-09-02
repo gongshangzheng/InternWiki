@@ -129,3 +129,17 @@ tags: [后端, API]
 - 周报 → 所属月报
 
 详情页底部自动显示关联报告链接，无需手动维护。
+
+## 文档增强特性
+
+- **子目录**：`content/interns/{slug}/docs/` 支持子目录组织，slug 自动带目录前缀（如 `docs/基础/xxx.md` → slug `基础/xxx`），侧边栏树形分组折叠
+- **id 排序**：frontmatter 可选 `id`（数字），有 id 的文档升序排在前（教程/系列按阅读序），无 id 按日期降序
+- **Mermaid**：` ```mermaid ` 代码块渲染为图表（暗色主题自适应、语法错误降级显示源码）
+- **正文 h1 剥离**：文档页正文首行 `# 标题` 自动去除（页头已渲染标题）
+- **面试追问预案**：面向面试的文档每篇末尾加 Q&A 板块（参照 junjiawang VoiceAgent 系列格式）
+
+## 参考文件
+
+- [references/writing-guide.md](references/writing-guide.md) — 文档写作规范（结构、风格、链接、mermaid 使用原则）
+- [references/report-templates.md](report-templates.md) — 报告模板
+- [references/mermaid-cheatsheet.md](references/mermaid-cheatsheet.md) — Mermaid 语法速查

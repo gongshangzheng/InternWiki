@@ -8,6 +8,7 @@ import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/pris
 import { Check, Copy } from 'lucide-react'
 import { cn, slugify, extractText } from '@/lib/utils'
 import { internalLinkHref, preprocessWikiLinks, preprocessHabitTags } from '@/lib/markdown'
+import { MermaidBlock } from './MermaidBlock'
 
 // Track .dark class on <html> so code blocks can switch theme reactively
 function useDarkMode() {
@@ -41,6 +42,10 @@ function CodeBlock({ className, children }: CodeProps) {
   const raw = String(children ?? '').replace(/\n$/, '')
   const langMatch = /language-([\w-]+)/.exec(className ?? '')
   const language = langMatch?.[1] ?? 'text'
+
+  if (language === 'mermaid') {
+    return <MermaidBlock code={raw} isDark={isDark} />
+  }
 
   const onCopy = async () => {
     try {

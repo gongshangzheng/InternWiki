@@ -18,7 +18,7 @@ summary: 在日报中记录习惯打卡，系统自动生成热力图和连续�
 - [ ] 文档更新 #writing
 ```
 
-系统会自动解析 `#tag`，在[习惯页](/interns/alice/habits)生成连续打卡天数和 30 天热力图。
+系统会自动解析 `#tag`，在[习惯页](/interns/tangwen/habits)生成连续打卡天数和 30 天热力图。
 
 ---
 

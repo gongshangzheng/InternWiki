@@ -24,12 +24,12 @@ pnpm report --help
 pnpm report new-intern --name 张三 --slug zhangsan --team 后端组 --role 后端开发实习生
 
 # 日报/周报/月报
-pnpm report new-daily   --intern alice [--date 2026-07-07]
-pnpm report new-weekly  --intern alice [--week 2026-W28]
-pnpm report new-monthly  --intern alice [--month 2026-07]
+pnpm report new-daily   --intern tangwen [--date 2026-07-07]
+pnpm report new-weekly  --intern tangwen [--week 2026-W28]
+pnpm report new-monthly  --intern tangwen [--month 2026-07]
 
 # 技术文档
-pnpm report new-doc --intern alice --title "JWT 认证" [--slug jwt-auth]
+pnpm report new-doc --intern tangwen --title "JWT 认证" [--slug jwt-auth]
 ```
 
 详细模板和规范见 [report-templates.md](report-templates.md)。

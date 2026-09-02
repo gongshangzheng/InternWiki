@@ -27,7 +27,7 @@ apps/web/public/
 使用绝对路径（带 base path 前缀）：
 
 ```markdown
-![架构图](/InternWiki/interns/alice/docs/architecture-diagram.png)
+![架构图](/InternWiki/interns/tangwen/docs/architecture-diagram.png)
 ```
 
 Base path 为 `/InternWiki/`，所有 public 下的资源 URL 都需要加这个前缀。

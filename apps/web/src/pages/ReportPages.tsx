@@ -218,7 +218,7 @@ function ReportPage({ type }: { type: CollectionKey }) {
 
         {/* Article body */}
         <div className="lo-card p-6">
-          <MarkdownView body={article.body} internSlug={internSlug} />
+          <MarkdownView body={article.body} internSlug={internSlug} stripLeadingH1 />
         </div>
 
         {/* Related reports */}

@@ -217,18 +217,23 @@ type MarkdownViewProps = {
   className?: string
   /** Intern slug for building intern-scoped links (project/task deep links) */
   internSlug?: string
+  /** Remove a leading `# heading` so it doesn't duplicate the page header */
+  stripLeadingH1?: boolean
 }
 
 // Module-level variable to pass internSlug to MarkdownLink without prop drilling
 // through react-markdown's component system.
 let currentInternSlug: string | undefined
 
-export function MarkdownView({ body, className, internSlug }: MarkdownViewProps) {
+export function MarkdownView({ body, className, internSlug, stripLeadingH1 }: MarkdownViewProps) {
   currentInternSlug = internSlug
-  const processedBody = useMemo(
-    () => preprocessHabitTags(preprocessWikiLinks(body)),
-    [body],
-  )
+  const processedBody = useMemo(() => {
+    let src = body
+    if (stripLeadingH1) {
+      src = src.replace(/^#\s+.+\n*/, '')
+    }
+    return preprocessHabitTags(preprocessWikiLinks(src))
+  }, [body, stripLeadingH1])
   return (
     <div className={cn('md-body text-[0.92rem] leading-relaxed text-body', className)}>
       <ReactMarkdown

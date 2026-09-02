@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { defaultUrlTransform } from 'react-markdown'
 import { Check, Copy } from 'lucide-react'
 import { cn, slugify, extractText } from '@/lib/utils'
 import { internalLinkHref, preprocessWikiLinks, preprocessHabitTags } from '@/lib/markdown'
@@ -225,6 +226,13 @@ type MarkdownViewProps = {
 // through react-markdown's component system.
 let currentInternSlug: string | undefined
 
+// react-markdown defaultUrlTransform 会清空非白名单协议的自定义 URL，
+// internwiki: 是 wiki 内链的中间协议（渲染前由 MarkdownLink 转成路由），需放行
+const urlTransform = (value: string) => {
+  if (value.startsWith('internwiki:')) return value
+  return defaultUrlTransform(value)
+}
+
 export function MarkdownView({ body, className, internSlug, stripLeadingH1 }: MarkdownViewProps) {
   currentInternSlug = internSlug
   const processedBody = useMemo(() => {
@@ -240,6 +248,7 @@ export function MarkdownView({ body, className, internSlug, stripLeadingH1 }: Ma
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
         components={components}
+        urlTransform={urlTransform}
       >
         {processedBody}
       </ReactMarkdown>

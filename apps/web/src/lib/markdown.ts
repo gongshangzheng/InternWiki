@@ -85,19 +85,22 @@ export function internalLinkHref(href: string, internSlug?: string): string | nu
   // collapse any leading ./ or ../ segments
   const cleaned = path.replace(/^(\.\.?\/)+/, '')
 
+  // report routes are intern-scoped: /interns/{intern}/{collection}/{slug}
+  const prefix = internSlug ? `/interns/${internSlug}` : ''
+
   // case: "{collection}/{slug}" — e.g. "daily/2026-07-07"
   const dirSlug = cleaned.match(/^([a-z]+)\/(.+)$/i)
   if (dirSlug) {
     const route = dirSlug[1] as CollectionKey
     if (['daily', 'weekly', 'monthly', 'docs'].includes(route)) {
-      return `/${route}/${dirSlug[2]}`
+      return `${prefix}/${route}/${dirSlug[2]}`
     }
   }
 
   // case: bare slug — look it up across all collections
   const route = findRouteForSlug(cleaned)
   if (route) {
-    return `/${route}/${cleaned}`
+    return `${prefix}/${route}/${cleaned}`
   }
 
   return null

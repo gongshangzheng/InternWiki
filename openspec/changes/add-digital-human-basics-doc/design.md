@@ -16,17 +16,23 @@
 ### 2. 生成任务：输入 → 形象 → 驱动 → 输出
 
 - 四步流程：身份条件（图/视频/资产）→ 创建形象 → 驱动信号（文本/语音）→ 表演视频
-- 两个正交评价维度（本文的核心心智模型）：
-  - **生成质量**（从无到有，覆盖更多身体部位）：唇同步 → 面部表情 → 头部姿态 → 手部动作 → 全身运动
-  - **工程性能**（从离线到实时）：离线生成 → 近实时（秒级）→ 实时交互（毫秒级、可打断、流式）
-- 任务分类速览（一句话带过六分类：video dubbing / talking head / portrait animation / 3D avatar / 上半身交互 / 流式基模）
+- 三轴心智模型（本文的核心框架，彼此不能混写）：
+  - **表现质量**（画得好不好）：画质/分辨率、身份一致性、唇音同步、表情与动作自然度、时序流畅度
+  - **表现范围**（能表现什么）：只换嘴 → 头肩 talking head → 上半身交互 → 手部动作 → 全身运动；它描述任务与应用场景的边界，不是质量高低
+  - **工程性能**（等得久不久）：离线生成 → 近实时（秒级）→ 实时交互（毫秒级、可打断、流式）；并关注延迟、吞吐、显存等
+- 任务分类速览只作为术语索引（video dubbing / talking head / portrait animation / 3D avatar 等），不替代三轴判断
 
-### 3. 四条主流技术路线
+### 3. 两轴技术分类：生成方式 × 渲染或资产后端
 
-每条路线：一句话原理 + 代表工作 + 优缺点。分类依据是**任务分解方式**（生成模型负责什么、渲染器负责什么），而非 2D/3D 之分。
+不要把“模型直接生成什么”和“最终靠什么资产/渲染器出画面”混成一组并列路线。这两件事可以组合：动作空间模型可以驱动 2D renderer，也可以驱动 FLAME/3DGS 等 3D 资产。
 
-- **3.1 局部换嘴**：只重绘嘴部 ROI，其余帧来自原视频（Wav2Lip、MuseTalk）。稳定便宜易落地，但表情、头动、手势全受限——一句话带过即可
-- **3.2 动作空间生成（motion space）**——团队当前主力路线，重点展开：
+- **生成方式**（模型负责什么）：
+  - **局部换嘴**：只重绘嘴部 ROI，其余帧来自原视频（Wav2Lip、MuseTalk）。稳定便宜易落地，但表情、头动、手势受限。
+  - **动作空间生成（motion space）**——团队当前主力：模型预测低维运动，渲染器保留或生成身份外观。
+  - **整帧视频生成**：直接预测视频 latent 或帧（FlashHead、LiveAvatar、Self-Forcing），表现范围自由但实时成本高。
+- **渲染或资产后端**（画面如何落地）：2D 参考图/视频外观渲染，或 3D 资产（rigged mesh、NeRF、3DGS 等）。NeRF → 3DGS 的效率演进应放在这一轴下，而不是当作第四种生成方式。
+
+- **动作空间生成（motion space）**——团队当前主力路线，重点展开：
   - 路线定义：把"身份外观"和"运动"拆开，生成模型只预测低维运动序列，渲染器把运动作用到参考身份上
   - **动作空间表示一览**（独立小节，一张表）——按"显式 ↔ 隐式"光谱组织：
     - 3DMM 系数（BFM / **FLAME**）：表情系数 + 头姿系数。FLAME 系数语义清晰，头部旋转、眼睛、下颌、眼睑、表情可单独读写（FLAP 即用 FLAME 系数做可控条件）；FLAME 顶点带 blendshape + LBS skinning，可直接驱动 3DGS avatar（LAM 的做法）
@@ -39,8 +45,7 @@
   - 渲染器消费侧配图：渲染循环图（头姿→变换矩阵、表情→表情系数→渲染），即 3D 引擎驱动 avatar 的标准形态——图中的"表情系数"正是上表的 blendshape/3DMM 系数
   - 扩散演进线：SadTalker（3DMM 系数，ExpNet+PoseVAE，无扩散）→ VASA-1（整体面部动力学 latent，Diffusion Transformer）→ Ditto（显式 motion representation + Conditional DiT，流式推理）→ Avatar Forcing（motion latent space + Diffusion Forcing 因果自回归，blockwise rollout + KV 缓存，500ms 延迟、6.8× 加速）
   - 选型逻辑：身份固定、背景稳定、实时交互、可控表情——正是会议面试官场景的选择理由
-- **3.3 3D 资产路线**：NeRF → 3DGS 演进一条线讲清效率转折——AD-NeRF（训练 167.6h、0.04 FPS）→ ER-NeRF（15.2 FPS）→ EGSTalker / GSTalker（40 分钟训练、125 FPS），转折点是体采样换成光栅化。与 3.2 的关系：3DGS 也可作为动作空间路线的渲染器
-- **3.4 整帧视频扩散基模**：直接在视频 latent/帧空间生成（FlashHead、LiveAvatar、Self-Forcing 流式蒸馏）。表现自由度高（身体、背景、场景），但成本高、长时稳定与实时化难
+- **3D 资产后端的效率演进**：NeRF → 3DGS——AD-NeRF（训练 167.6h、0.04 FPS）→ ER-NeRF（15.2 FPS）→ EGSTalker / GSTalker（40 分钟训练、125 FPS），转折点是体采样换成光栅化。3DGS 可作为动作空间生成的渲染器，而非与动作空间并列的“第四条生成路线”。
 
 ### 4. 数字人系统：从模型到产品
 
@@ -97,13 +102,13 @@
 素材：`~/DigitalHuman/finetune-avatarforcing`（openspec changes + train_lora.py）。约 2000-2500 字。前置阅读：[[A1]]。
 
 - 背景：英文 wav2vec 960h 中文唇同步不足；300s 长视频身份漂移；数据三域 talkvid + news + linli
-- 音频中文化一整套（蒸馏桥 → geom 桥 → georkd）：B_new 9216→512、geom 损失反塌缩、RKD 保英文老师侧成对距离、多域 257 clips；指标表 md_georkd_best sync_c 6.299/8.853
+- 音频中文化一整套（蒸馏桥 → geom 桥 → georkd）：B_new 9216→512、geom 损失反塌缩、RKD 保英文老师侧成对距离；多域257 clips 的 md_georkd_best 当前 sync_c/sync_d 为6.299/8.853，但数量/多样性混杂且人工判定待完成，不作纯数据量归因
 - LoRA 训练：模块试错表（cross-attn q/kv rank16 + stable sync 0.05 入选 / 时序层试过 / x_embedder 四崩）、工具链（--flow-init / --early-stop-patience / export_merged）、对照臂（geom_lora_s30 锚 6.122/9.044）
-- 参考条件化 v2 + identity-drift 正负结论：v1 失败双因（GT 捷径 + 无容量，换库输出差 <0.001）→ v2 Ditto 式逐层拼接 8 层、ref_mode 三档；A1 推理期锚点 GO（c_hi=0.99，300s csim 0.645→0.935，无同步税）；A2 训练期条件化 FAIL（6/6 劣于零条件臂）
-- **身份漂移定位实验（定位在先、治理在后）**：两个假设对照实验——
-  - 膜长实验（范数撑开假说）：**证伪**。noguide 300s 的 |r_d| 首/中/末 1/3 = 2.03/2.04/2.01，斜率 −0.01/min，无增长无撑开；GT 2.17/2.18/2.16 斜率 ≈0；A1 引导 2.09 恒定。模长恒定偏低（−14%，对应模糊问题，不累积）
-  - 夹角实验（方向漂移假说）：**成立，与漂移曲线精确同构**。noguide 离首帧方向 10.1°→15.1°→17.5°（峰值 24.8°），离 GT 方向字典最近邻 7.1°→12.4°→14.1°，斜率 +2.1°/min 持续游走；A1 引导 3.4°→3.3°→2.5°（峰值 6.2°）≈0 全程钉住；GT 自身游走带宽 3~5°（4° 左右波动）
-  - 结论链：漂移主体 = latent 方向持续转角 → 引导/条件化都应作用于方向 → A1 锚点引导与参考条件化 v2 的设计依据
+- 参考条件化：v1失败双因（GT捷径 + 无容量，换库输出差<0.001）；v2为待实现验证的逐层拼接8层/ref_mode三档设计。A1 `c_hi=0.99` 有c1 300s CSIM 0.645→0.935的单身份结果；A2训练期条件化为失败对照（6/6劣于零条件臂）
+- **身份漂移定位实验**：c1 单身份上的两个候选假设——
+  - 模长实验：noguide 300s 的 |r_d| 首/中/末为2.03/2.04/2.01，未出现持续增长，因此不支持撑开假说；跨身份机制仍待验证
+  - 夹角实验：noguide 离首帧方向10.1°→15.1°→17.5°，A1为3.4°→3.3°→2.5°，支持方向游走假说；需要跨身份/音频复核，不能称主要机制已确定
+  - 当前工程含义：A1优先约束方向是合理尝试；v2条件化仍为待验证设计
 - 指标表格化
 
 ## 专题 B1：《Ditto 模型精读》ditto-arch
@@ -111,7 +116,7 @@
 素材：博客 paper-ditto.html + ditto-talkinghead.html。约 2000-2500 字。只讲模型本身。
 
 - 任务拆分：音频到面部运动 + 运动到视频渲染两层（"谁在说话"与"怎么动"分离）；Ditto 的判断——"生成空间"比"生成模型"更重要
-- Motion Space：Motion Extractor 输出 canonical keypoints c、expression deformation δ、head rotation R、translation t；扩散模型只预测 m = {δ, R, t}（identity-agnostic，265 维）
+- Motion Space：论文抽象为 canonical keypoints c、deformation δ、rotation R、translation t；部署 LMDM 输出265维 scale + pitch/yaw/roll + translation + expression，不含kp（由源侧回填），身份与运动并未完全解耦
 - Conditional DiT（LMDM）：ECS（音频特征/眼部状态/参考 keypoints/emotion，cross-attention 持续引导）+ ICS（初始运动，拼到噪声序列，保长序列连续）
 - 渲染：Appearance Feature Extractor + Face Renderer；参考身份 keypoints 与生成运动合成 x̂ = c_ref·R̂ + δ̂ + t̂
 - 流式推理与可控性：gaze correction、眨眼、emotion label；RTF 与 385ms 首帧
@@ -123,37 +128,33 @@
 
 素材：`~/code/digital_human`（ditto-mouth-motion-isolation change + models/ditto/ 源码）。约 1500-2000 字。前置阅读：[[B1]]。
 
-- 问题：视频源双重驱动（源嘴动叠加音频唇动）；三条泄露通道（exp 唇通道逐帧偏移 / warp 逐帧源外观 f_s 自带源嘴纹理 / x_d kp 回填）；术语速查表（x_d 265 维、x_s、f_s、M_c2o、kp 21 点骨架）
-- 演进线（每版：方案 → 人工判定 → 裁决）：v1 运动隔离渲染层不可见作废 → v2 整帧钉首帧终裁（v3/v4 否决回滚）→ kp 回填泄露修复 → 0.6s 音画错位修复（前置 15 帧静音垫）
+- 问题：视频源双重驱动（源嘴动叠加音频唇动）；三条泄露通道（exp 的后验 probing 控制映射 / warp 逐帧源外观 f_s 自带源嘴纹理 / x_d kp 回填）；术语速查表（x_d 265维、不含kp；x_s、f_s、M_c2o、kp 21点骨架）
+- 演进线（每版：方案 → 人工判定 → 裁决）：v1 运动隔离渲染层不可见作废 → v2 整帧钉首帧方向保留但最终人工判定待补齐 → kp 回填泄露修复（单 case 指标）→ 前3.2秒错位的静音垫/首窗/M_c2o 假设均已回滚或撤回，根因待继续定位
 - 开关 isolate_source_mouth，默认关，不改权重
-- 指标表：LSE-C 3.44→3.74→4.87、LSE-D 11.12→10.93→8.81，单图上限 5.01/8.75 对照
+- 指标表：单 case 下 LSE-C 3.44→3.74→4.87、LSE-D 11.12→10.93→8.81；单图上限 5.01/8.75 只作该样本技术参照
 
 ## 专题 C：《CyberVerse 工程专题》cyberverse-notes
 
-素材：`~/code/CyberVerse`（19 个归档 change + rtf-benchmark.md 38 条实测）。约 2000-2500 字。定位：工程实践，博客未写的后续优化。
+素材：`~/code/CyberVerse` 的归档 change 与 `rtf-benchmark.md`。约 2000-2500 字。只写基准记录可直接支持的发布链路与性能事实。
 
-### C1. 架构概览（一段 + 一张表）
-三进程（Python inference gRPC / Go 编排 WebRTC / vite 前端）+ 六个流式服务；详细架构链接博客文章
+### C1. 发布链路与 GPU 预算
+- 以浏览器 25fps 消费为背景，隔离基准 GPU 侧 decode/warp/LMDM/stitch 合计约 38.5ms/帧，占 40ms 预算约 96%
+- 结论：生产侧排队会直接变成卡顿，不能把慢都归因于单个模型阶段
 
 ### C2. 抖动治理
-- 呲呲声三步取证与解法：NVENC 死等 200ms tail grace（改 shortfall==1 + deficit 记账）→ 每段相对锚定累积漂移（绝对网格 deadline + 300ms 重锚定护栏）→ cadence 1.06×→1.000、concealment 3%→0、TTFF 2.2s→~1s
-- 段间爆破音：per-200ms 重建 Opus encoder 的 19733 LSB 阶跃 → per-peer 持久复用
-- 僵尸会话：GPU 滞留 ~9GB → terminal Delete + idle 驱逐 + 30s 看门狗
-- 间歇卡顿取证：GPU0 同租户训练争用（fps 25→12-14），非代码回归——取证方法论本身值得写
+- H.264 流的段尾持留：旧 `shortfall<=2` 固定 200ms grace 使 encode 超过 200ms 段预算；改 `shortfall==1` 立即返回 + deficit 记账后，cadence 1.056–1.070→1.018–1.020，concealment 2.5–3.6%→0.022%
+- 绝对播放锚点：消除相对锚定的逐段误差累积，240s 会话稳态 cadence 1.000
+- 僵尸会话：terminal Delete + idle 卸载 + 30s peer 看门狗；会话约 35s 归零、backend 约 3min 卸载，但插件每周期仍残留约 1.4GB，不能写 GPU 归零
 
-### C3. 速度优化
-- alignment net 逐帧 20 次 GPU 同步 → batch=10：paste p95 4750→52.7ms（-98.9%）
-- 全 GPU 帧管线（去归一化/uint8 H2D/网格缓存/pinned D2H）：paste p95 67.3→12.7ms、RTF 0.698→0.588、TTFF 1.39→1.18s
-- 720p 全画布 warp 15ms/帧 → 人脸 ROI warp 恢复实时
-- 软 VP8 → NVENC H.264：像素吞吐 3.3×、预热 663→445ms
-- inference 按需生命周期：空闲 3 分钟停进程 GPU 归零
+### C3. 局部优化与端到端边界
+- decode fp32→fp16：隔离 73.5→17.7ms/帧
+- warp fp16 TRT：隔离 14.9→11.8ms，但生产端到端 fps 无明显收益，未采纳
+- 结论：阶段变快不等于浏览器变快，需同时观测 GPU利用率、fps、stall、cadence与TTFF
 
 ### C4. 负结果档案
-- fp16/DDIM 只降 RTF 不提 fps（GPU 饱和）
-- ditto GPU putback 及微优化零收益（默认 CUDA 流串行）
-- config 降帧 25→20 反致抖动
-- turn-audio-flush 弃做（积压形态搬家）、换轮 TTFF 2.18s 待 timeline 跳播
-- 价值：负结果防止后人重蹈，也是选型依据
+- 单改 25→20fps 失败：online 窗口和 audio2motion→warp 时序以25fps为前提，配置降帧造成错位
+- GPU putback 与继续调 CUDA stream 在GPU饱和下无端到端收益
+- 插件显存残留是独立待办，不能与僵尸会话回收混为一谈
 
 ## 专题 D：《动作空间专题》motion-space-notes
 
@@ -161,21 +162,20 @@
 
 ### D1. 表示谱系：显式 ↔ 隐式光谱（总表）
 
-- **3DMM / FLAME 系数**：身份/表情/头姿系数分离。FLAME 顶点带 blendshape + LBS skinning（可直驱 3DGS，LAM 做法）；FLAME UV 空间是空间对齐工作区（FlexAvatar 2500 token=50×50 网格、UIKA canonical UV）
+- **3DMM / FLAME 系数**：身份/表情/头姿系数分离。FLAME 顶点带 blendshape + LBS skinning（可驱动 3DGS，LAM 做法）；FLAME UV 空间是空间对齐工作区
 - **Blendshape**：ARKit-52 工业标准；LiteAvatar 32 维口型参数
-- **隐式关键点**：LivePortrait 紧凑关键点 = implicit blendshapes（无显式语义维度，但 MLP 能学出局部形变 offset）
+- **LivePortrait/Ditto 控制表示**：论文抽象使用 canonical keypoints、deformation、rotation、translation；部署 LMDM 输出 265 维 scale + pitch/yaw/roll + translation + expression，**不含 kp**
 - **整体面部 latent**：VASA-1；AF 的 FLOAT latent（512 维，z = z_S + m_S 显式分解）
-- **混合表示**：Ditto 的 265 维（scale + pose + t + 63 exp）
 - 光谱两端取舍：显式（可解释/可编辑/可接工业管线）vs 隐式（容量大/上限高）
 
 ### D2. 拆分机制：Ditto 怎么把眼部和嘴部拆开（本文核心问答）
 
 四层机制（全部有源码/论文出处）：
-- **表示层（继承而非训练）**：motion space 来自预训练 LivePortrait 风格 Motion Extractor；exp 为 21×3 语义布局，唇部行 [6,12,14,17,19,20]、眼部行 [11,13,15,16,18]——分区固化在预训练表示中
-- **条件层（按音频可解释性拆）**：音频解释不了眨眼/视线 → 眼部状态（aspect ratio + pupil position）单独作为 ECS 条件 e 走 cross-attention；嘴部由 HuBERT 音频驱动 exp 通道
+- **表示与后验映射**：exp 为 21×3 deformation 操作布局，但预训练不提供嘴/眼天然语义；论文通过逐维扰动和渲染观察建立控制映射，工程代码再手工选用唇部/眼部索引
+- **条件层（按音频可解释性拆）**：音频解释不了眨眼/视线 → 眼部状态（aspect ratio + pupil position）单独作为 ECS 条件 e 走 cross-attention；嘴部主要由 HuBERT 音频驱动
 - **Loss 层（adaptive loss weights）**：按控制区域分组，相邻 epoch 平均 loss 差异动态调权 + softmax 调整系数，防止某区域训练不足
 - **推理层（区域 alpha mask 混合）**：motion_stitch.py 用 0/1 mask 按区域混合驱动值/源值；我们的 mouth-isolation 改动即基于此机制
-- mermaid 图：21×3 exp 通道布局 → 面部区域映射示意
+- mermaid 图：21×3 deformation 操作布局 → 后验 probing 建立的局部控制映射
 
 ### D3. 各表示的来源与训练方式对比
 
@@ -201,17 +201,17 @@
 | 全冻结（仅训桥/新组件） | 蒸馏桥 B_new 全开放精调（flow/wav2vec 冻结） | 桥 4.7M | 接入新音频编码器、不动主干 |
 | LoRA（低秩旁路） | flow cross-attn q/kv rank16 | 低秩增量 | 主干域适配（中文化） |
 | LoRA 注入点选择 | 两轮消融：round1 q/kv/proj 三轴 → round2 路径后缀精确匹配 + 4 臂（crossproj/mlp/selfonly/full）+ 条件模块 c_embedder 臂 | 按注入点 | 容量与过拟合平衡 |
-| 单层全参解冻 | FinalLayer readout（targets=none 唯一放行 final_layer） | 0.79M→勘误 2.624M | 历史零训练的瓶颈层探针 |
-| 整块开放 vs 桥内 LoRA | 桥全开放精调（吃掉蒸馏增益 0.38→0.13）vs 桥内 LoRA rank16（~0.15M 低秩约束） | — | 蒸馏契约漂移问题 |
+| 单层全参解冻 | FinalLayer readout（targets=none 唯一放行 final_layer） | 2.624M（adaLN 1024→2048 + Linear 1024→512） | 历史零训练的瓶颈层探针 |
+| 整块开放 vs 桥内 LoRA | 路线A全开放 c1 LSE-C 4.565；路线B桥内 LoRA 5.483；均低于纯桥5.719 | — | 蒸馏契约漂移问题 |
 
 ### E2. 我们的实战结论（选型逻辑）
 
-- **注入点是唯一有效轴**：三轴消融（层/秩/数据）中只有注入位置带来收益（+0.39 LSE-C）；秩与数据量在数据不足时非瓶颈
-- **数据是瓶颈的判据**：多域 257 clips 后 sync_c 6.299 全臂第一——"数据不足"假设 A 成立；talkvid scaling 验证
-- **全开放的代价**：桥全开放精调让训练侧 sync 降但验证侧 guided_flow 恶化（契约漂移）——LoRA 低秩约束是"吸收监督又不过度偏离蒸馏契约"的平衡点
-- **解冻的判据**：历史臂全部未命中 final_layer（17 个历史臂零覆盖）→ 空白区探针；以训好的 merged LoRA 为基底（--flow-init）再解冻，归因最干净
+- **注入点是本轮主轴**：中文域适配消融中注入位置带来 +0.39 LSE-C；不是所有模型的普适结论
+- **多域结果仍待归因**：257 clips 的 md_georkd_best 双轨 sync_c 6.299 较优，但样本数、来源和身份多样性同时变化，人工判定未完成，不能归因于纯数据量
+- **全开放的代价**：路线A训练侧 sync 降、guided_flow 恶化，生成侧 c1 LSE-C 4.565 < 纯桥 5.719；桥内 LoRA 5.483 较A改善但仍未超纯桥
+- **解冻的判据**：历史臂未命中 final_layer（17个历史臂零覆盖）→ 空白区探针；以训好的 merged LoRA 为基底（--flow-init）再解冻，归因更干净
 - **工具链**：--flow-init 任意基底 strict 载入、--early-stop-patience 谷底连升即停、export_merged、注入点命中清单打印（可审计）
-- 指标表：各形态 sync_c / LSE 对照（base 5.288 → layer_proj 5.677 → md_georkd_best 6.299 → 锚 6.122）
+- **指标表必须拆口径**：Round1 单轨 output LSE-C（5.288/5.677）与多域双轨 SyncNet v2 均值（6.122/6.299）不横向排序
 
 ### E3. 决策树
 
@@ -219,29 +219,28 @@
 
 ## 专题 F：《数据集整理专题》dataset-notes
 
-素材：`~/code/digital_human`（datasets/ 适配器 base/talkvid/conversation/long）+ `~/DigitalHuman/finetune-avatarforcing`（prepare_dual_lang_tts / normalize_dual_lang_audio / measure_offset_dual / correct_clip_offset / prepare_identity / build_nopb_anchor_bank）。约 2000-2500 字。核心问答："一份能训练和评测的数字人数据集是怎么整理出来的"。
+素材：`~/code/digital_human`（datasets/ 适配器）+ `~/DigitalHuman/finetune-avatarforcing`。双语音频脚本在 scripts；`measure_offset_dual.py`、`correct_clip_offset.py`、`prepare_identity.py` 在 models/avatarforcing。约 2000-2500 字。
 
 ### F1. 数据域与适配器
 
-- 三域数据：talkvid（通用说话视频）/ news（央视联播，播报风格）/ linli；conversation / long 适配器
-- 双语 TTS 数据管线：prepare_dual_lang_tts → normalize_dual_lang_audio（响度/采样率归一）→ dual_lang_tts_items.jsonl
+- 三域数据：talkvid（通用说话视频）/ news（播报风格）/ linli（补充来源）；多域改变数量、来源和身份分布，不做单一归因
+- TTS 管线：items JSONL/文本输入 → prepare_dual_lang_tts 生成16k WAV并追加 audio_manifest.jsonl → normalize_dual_lang_audio 回写规范化信息
 
 ### F2. 音频一致性
 
-- 为什么需要：同一 clip 的音频要重采样 16kHz、响度归一，否则特征抽取（wav2vec/HuBERT）和唇同步评测都会被无关方差污染
-- 具体做法（从脚本提炼）：采样率/声道/响度归一、静音段处理、片段切分
+- normalize 脚本实际做：16kHz、单声道、loudnorm、首尾静音裁剪和 manifest 更新
+- 这条链针对双语 TTS 探针，不外推为所有视频数据的统一处理
 
 ### F3. Offset 对齐（音画对齐）
 
-- 为什么需要：数据集的音频与视频常有毫秒级错位（剪辑/转码引入），直接训练会教模型学错位唇形
-- offset 双重测量（measure_offset_dual）：两路独立测量互为校验
-- correct_clip_offset 修正 + 聚合 offset 口径（评测时全 clip 统一）
-- mermaid 图：原始 clip → 音频归一 → offset 双测 → 修正 → 训练/评测数据集
+- offset 是对齐测量元数据；measure_offset_dual 与 correct_clip_offset 用于复核与 LSE 口径
+- 多域训练使用 offsets.json；缺 offset 的 clip 进入排除清单，不在本流程中一律物理平移媒体
+- mermaid 图：素材 → 音频规范化/manifest → offset 元数据 → 训练或评测口径
 
 ### F4. 身份数据与锚帧库
 
-- prepare_identity（身份素材准备）→ build_nopb_anchor_bank（锚帧库）→ A1 引导的库从哪来
-- 与身份漂移治理的衔接（指向 A2 篇）
+- build_nopb_anchor_bank：首帧定固定裁剪框，后续帧同框裁512，不旋转校正、不做质量筛选，全帧入库
+- A1 当前是 c1 单身份实验输入，不能外推为跨身份部署策略
 
 ## 专题 G：《评测指标专题》metrics-notes
 
@@ -249,29 +248,27 @@
 
 ### G1. 指标地图：问题 → 指标（主表）
 
-按"回答的问题"组织（沿用 metrics-guide 的分组表）：
-- 嘴型和声音对得上吗 → Sync-C/Sync-D（经验值：自然视频 >5，好生成 >3，不同步 <2）
-- 生成的人和参考是同一人吗 → CSIM
-- 像素/感知质量 → PSNR、SSIM、LPIPS、TOPIQ-FR
-- 无参考质量（NR-IQA）→ musiq_koniq 等 7+ 项（整帧/人脸裁剪/嘴唇裁剪三档）
-- 时间长了会变差吗 → CSIM-drift、LPIPS-drift、Dino-S
-- 运动质量 → SID、flow_smoothness、motion_magnitude；表情 expression_nr
-- 跑得快吗占多少资源 → FPS、RTF、VRAM、GPU-Util、Throughput、Latency P50/P95/P99
-- Tier 2（THEval 衍生）：lip_dynamics、silent_lip_stability 等
+按"回答的问题"组织：
+- 嘴型和声音对得上吗 → Sync-C（高好）/Sync-D（L2距离，低好）
+- 生成的人和参考是同一人吗 → CSIM等身份指标
+- 像素/感知质量 → PSNR、SSIM、LPIPS、TOPIQ-FR（需配对GT）
+- 无参考质量（NR-IQA）→ musiq_koniq 等（512构图整帧/人脸/嘴唇三档）
+- 长时身份偏离 → CSIM-drift、LPIPS-drift；相邻帧稳定 → Dino-S、flow_smoothness
+- 轨道：cross_identity 无配对GT但仍可跑 sync/csim/NR；listening 配置空指标，走人工评价
 
 ### G2. 口径的坑（演进史）
 
-- **指标只在人脸裁剪视频上算**：pasteback 全帧不参与指标——两层裁剪（输入侧 face_crop 契约 crop_coeff=1.9 + 指标级 face_crop_mode）
-- LPIPS/TOPIQ-FR 勘误：曾以为不受裁剪影响，实际构造函数默认也在做二次裁剪
-- speed-run 打分口径定稿：SyncNet v2 + 人脸检测恢复；身份模板统一中间帧；共用裁剪框保证构图逐像素一致
-- 与 guanmu 参考实现逐指标对照（sync 族 corr=1.000、csim 逐像素 diff=0）
-- cross_identity / listening 轨道无 GT——指标必须按轨道绑定（applies_to）
+- 正式 dh-eval：框架层输入/GT统一512人脸构图，指标层再按需求裁脸/嘴或对齐；pasteback关闭
+- speed-run：输入已预裁512，直接对 output.mp4 打分，无 face.mp4；当前 docs 与 metrics.yaml 对身份首帧/中间帧存在快照不一致，报告必须注明版本
+- LPIPS/TOPIQ-FR 默认会二次 face-margin 裁剪
+- 与 guanmu 对照：sync族 corr=1.000、CSIM单样本模板逐像素一致；musiq_koniq 因输入区域不同 corr=0.036，不能称完全对齐
+- 历史裁剪口径变更后必须重建基线，禁止横向比较
 
 ### G3. 指标与实际问题的映射案例
 
-- 例 1：怀疑长视频身份漂移 → CSIM-drift 曲线定位 → 引出 A2 篇的膜长/夹角实验
-- 例 2：唇同步可疑高（Wav2Lip 得分最高）→ 判定结果可疑需复验——单一指标会骗人，要交叉验证
-- 例 3：3DGS 无背景算法的 PSNR 不公平 → 人脸 matting 前置
+- 例 1：CSIM-drift 曲线提示身份随时间下降 → 用模长/夹角实验提出并检验候选机制；当前方向游走仅有 c1 单身份支持证据
+- 例 2：不同裁剪、模板或 SyncNet 版本会改变历史数值 → 先统一同口径基线，再解释指标高低
+- 例 3：正式 dh-eval 与 speed-run 的输入裁剪路径不同 → 报告必须标注路径，不能横向混表
 
 
 ## 专题篇写作约束
@@ -284,3 +281,4 @@
 - 源码细节点到为止（符号含义 + 文件路径），完整叙述留在原仓库 openspec 里
 - 配图：从博客复制 webp 到 `public/interns/tangwen/docs/`（AF 三张、Ditto 两张）+ 用户提供的渲染循环图
 - mermaid 图：Ditto 管线流程图（B1）、AF blockwise rollout 数据流（A1）——依赖前置 change add-mermaid-support 落地
+- **技术表述审计基线**：三轴（表现质量/表现范围/工程性能）不得混写；术语或缩写首次出现须给出白话定义；指标必须说明高低方向、回答的问题与适用口径；结论必须能回溯到观察或实验；内部链接必须在子目录 slug 下可达；不以“核心/最值钱/会骗人”等口号替代论证。

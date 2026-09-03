@@ -2,7 +2,9 @@ import { useState, useEffect, useMemo, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import rehypeRaw from 'rehype-raw'
+import rehypeKatex from 'rehype-katex'
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { defaultUrlTransform } from 'react-markdown'
@@ -233,6 +235,19 @@ const urlTransform = (value: string) => {
   return defaultUrlTransform(value)
 }
 
+function normalizeMathDelimiters(body: string) {
+  const parts = body.split(/(```[\s\S]*?```|`[^`]+`)/g)
+  return parts
+    .map((part, index) => {
+      if (index % 2 === 1) return part
+      return part
+        .replace(/\\\[([\s\S]*?)\\\]/g, (_, formula: string) => `$$\n${formula.trim()}\n$$`)
+        .replace(/\\\(([\s\S]*?)\\\)/g, (_, formula: string) => `$${formula}$`)
+        .replace(/(^|[^$])\$\$([^\n]+?)\$\$(?=$|[^$])/gm, (_, prefix: string, formula: string) => `${prefix}\n$$\n${formula.trim()}\n$$\n`)
+    })
+    .join('')
+}
+
 export function MarkdownView({ body, className, internSlug, stripLeadingH1 }: MarkdownViewProps) {
   currentInternSlug = internSlug
   const processedBody = useMemo(() => {
@@ -240,13 +255,13 @@ export function MarkdownView({ body, className, internSlug, stripLeadingH1 }: Ma
     if (stripLeadingH1) {
       src = src.replace(/^#\s+.+\n*/, '')
     }
-    return preprocessHabitTags(preprocessWikiLinks(src))
+    return preprocessHabitTags(preprocessWikiLinks(normalizeMathDelimiters(src)))
   }, [body, stripLeadingH1])
   return (
     <div className={cn('md-body text-[0.92rem] leading-relaxed text-body', className)}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeRaw, [rehypeKatex, { trust: false, throwOnError: false }]]}
         components={components}
         urlTransform={urlTransform}
       >

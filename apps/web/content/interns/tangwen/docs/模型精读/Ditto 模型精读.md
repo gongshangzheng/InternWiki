@@ -10,7 +10,7 @@ id: 4
 
 ## 一、任务分解："生成空间"比"生成模型"更重要
 
-Ditto 的核心判断：对实时数字人而言，选择在什么空间生成，比选择什么生成模型更关键。
+Ditto 先回答的不是"用什么网络"，而是"让网络直接预测什么"。这里的**生成空间**就是模型输出的数据格式：可以是整张图，也可以是一串描述嘴形、表情和头部姿态的运动数据。对实时系统来说，预测后者的计算量小得多。
 
 | 路线 | 优势 | 瓶颈 |
 |------|------|------|
@@ -30,7 +30,9 @@ Ditto 的核心判断：对实时数字人而言，选择在什么空间生成�
 - expression deformation $\boldsymbol{\delta}$（表情形变）
 - head rotation $\mathbf{R}$、translation $\mathbf{t}$
 
-扩散模型预测的是 $\mathbf{m}=\{\boldsymbol{\delta},\mathbf{R},\mathbf{t}\}$（265 维、identity-agnostic），**不碰图像 latent**。
+论文把要生成的运动抽象为 $\mathbf{m}=\{\boldsymbol{\delta},\mathbf{R},\mathbf{t}\}$，目的是说明模型主要生成运动而不是图像 latent。部署代码中的 LMDM 输出则是具体的 265 维编码：scale(1)、pitch/yaw/roll 各 66、translation(3)、expression(63)。它**不含 kp**；kp 由源侧信息回填。这个表示能大幅弱化身份与运动的耦合，但论文也明确指出两者并没有完全解耦。
+
+把整条链路翻成白话就是：参考帧提供“这是谁”的骨架和外观；音频生成“这张脸这一刻该怎么动”的运动数据；渲染器把这份运动套回参考身份，得到视频。下面的公式只是在说明最后一步如何把参考骨架和生成的运动相加。
 
 从运动到隐式 3D keypoints：
 
@@ -44,7 +46,9 @@ $\mathbf{c}_{ref}$ 来自参考身份（身份保留），生成的运动叠加�
 
 ![Conditional DiT 架构](/InternWiki/interns/tangwen/docs/ditto-dit.webp)
 
-**ECS（Enhanced Conditional Signals）**——通过 cross-attention 在整个片段持续引导：
+模型生成一段动作时，需要两类提示：一类全程都有效，例如音频和眼部状态；另一类只负责告诉它“这一段从什么姿态开始”，避免和前一段断开。Ditto 分别把它们叫作 ECS 和 ICS。Conditional DiT（也叫 LMDM）是接收这些提示、从噪声里逐步还原动作序列的扩散 Transformer；cross-attention 可以理解成它在每一步都回头读取提示信息。
+
+**ECS（Enhanced Conditional Signals，持续条件）**——在整个片段持续引导：
 
 | 信号 | 来源 | 作用 |
 |------|------|------|
@@ -53,7 +57,7 @@ $\mathbf{c}_{ref}$ 来自参考身份（身份保留），生成的运动叠加�
 | canonical keypoints | 参考帧 | 适配目标身份几何 |
 | emotion label | clip 级标注 | 表情强度与风格 |
 
-**ICS（Initial Conditional Signal）**——参考初始运动，复制到序列长度后**与噪声序列拼接**：负责片段起点稳定，降低长序列拼接跳变。
+**ICS（Initial Conditional Signal，起始条件）**——取参考帧的初始运动，复制到与待生成序列相同的长度后，与噪声序列并排送进模型。它不负责整段的细节，而是给模型一个明确起点：上一段停在哪，这一段就从哪接上，从而减少长序列衔接时突然跳动。
 
 ## 四、训练管线：把视频"训成运动生成器"
 
@@ -96,7 +100,7 @@ flowchart TD
 
 **Q：Ditto 和 VASA-1 都是运动空间扩散，差异在哪？**
 
-运动表示不同：VASA-1 在"整体面部动力学 latent"里生成（容量大但隐式），Ditto 用显式混合表示（keypoints + deformation + rotation + translation，265 维）+ Conditional DiT。Ditto 的显式表示带来三个工程优势：控制粒度（按区域干预）、开源可复现的推理链路、渲染器解耦（表示和渲染可以独立替换）。VASA-1 没开源，其 latent 表示对外部开发者不可用。这也解释了为什么我们选 Ditto 做基础——可改。
+运动表示不同：VASA-1 在整体面部动力学 latent 中生成，Ditto 的论文抽象使用 deformation、rotation 和 translation，部署时以 265 维 scale/pose/translation/expression 编码输出，再交给 LivePortrait 风格 renderer。Ditto 的开源推理链路、后验 probing 得到的区域控制映射，以及可替换的工程组件，使它更便于复现和修改；这与“每个维度天然有显式语义”不是一回事。VASA-1 没有可用代码，因此在需要工程改造时 Ditto 更适合作为基础。
 
 **Q：为什么用 lipsync score 选 checkpoint 而不是常规 val loss？**
 

@@ -1,8 +1,11 @@
-import { useState, useEffect, useMemo, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import rehypeRaw from 'rehype-raw'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Check, Copy } from 'lucide-react'
@@ -91,8 +94,17 @@ function CodeBlock({ className, children }: CodeProps) {
   )
 }
 
+// Mermaid fence: emit <pre class="mermaid"> (raw text); SVG is injected by the
+// post-render effect in MarkdownView (see ProjFlow MarkdownRenderer.vue).
+function MermaidBlock({ children }: CodeProps) {
+  return <pre className="mermaid">{String(children ?? '').replace(/\n$/, '')}</pre>
+}
+
 function InlineCode({ className, children, ...rest }: CodeProps) {
   const text = String(children ?? '')
+  if ((className ?? '').includes('language-mermaid')) {
+    return <MermaidBlock>{children}</MermaidBlock>
+  }
   if ((className ?? '').includes('language-') || text.includes('\n')) {
     return <CodeBlock className={className}>{children}</CodeBlock>
   }
@@ -220,15 +232,60 @@ let currentInternSlug: string | undefined
 
 export function MarkdownView({ body, className, internSlug }: MarkdownViewProps) {
   currentInternSlug = internSlug
+  const containerRef = useRef<HTMLDivElement>(null)
+  const isDark = useDarkMode()
   const processedBody = useMemo(
     () => preprocessHabitTags(preprocessWikiLinks(body)),
     [body],
   )
+
+  // Post-render mermaid processing (mirrors ~/ProjFlow MarkdownRenderer.vue):
+  // re-run whenever content or theme changes; keep original source in
+  // dataset.source so re-theming starts from text, not processed SVG.
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const nodes = Array.from(container.querySelectorAll<HTMLPreElement>('pre.mermaid'))
+    if (nodes.length === 0) return
+
+    let cancelled = false
+    void (async () => {
+      try {
+        const mermaid = (await import('mermaid')).default
+        if (cancelled) return
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: isDark ? 'dark' : 'default',
+          securityLevel: 'loose',
+          fontFamily: 'system-ui, sans-serif',
+        })
+        for (const node of nodes) {
+          if (!node.dataset.source) {
+            node.dataset.source = node.textContent ?? ''
+          } else {
+            node.textContent = node.dataset.source
+            node.removeAttribute('data-processed')
+          }
+          node.querySelector('svg')?.remove()
+        }
+        await mermaid.run({ nodes, suppressErrors: true })
+      } catch (e) {
+        console.warn('Mermaid render error:', e)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [processedBody, isDark])
+
   return (
-    <div className={cn('md-body text-[0.92rem] leading-relaxed text-body', className)}>
+    <div
+      ref={containerRef}
+      className={cn('md-body text-[0.92rem] leading-relaxed text-body', className)}
+    >
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeRaw, rehypeKatex]}
         components={components}
       >
         {processedBody}

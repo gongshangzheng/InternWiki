@@ -1,16 +1,17 @@
-import { useState, useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeRaw from 'rehype-raw'
 import rehypeKatex from 'rehype-katex'
-import 'katex/dist/katex.min.css'
 import { PrismAsyncLight as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { defaultUrlTransform } from 'react-markdown'
 import { Check, Copy } from 'lucide-react'
 import { cn, slugify, extractText } from '@/lib/utils'
 import { internalLinkHref, preprocessWikiLinks, preprocessHabitTags } from '@/lib/markdown'
+import { MermaidBlock } from './MermaidBlock'
 
 // Track .dark class on <html> so code blocks can switch theme reactively
 function useDarkMode() {
@@ -44,6 +45,10 @@ function CodeBlock({ className, children }: CodeProps) {
   const raw = String(children ?? '').replace(/\n$/, '')
   const langMatch = /language-([\w-]+)/.exec(className ?? '')
   const language = langMatch?.[1] ?? 'text'
+
+  if (language === 'mermaid') {
+    return <MermaidBlock code={raw} isDark={isDark} />
+  }
 
   const onCopy = async () => {
     try {
@@ -94,17 +99,8 @@ function CodeBlock({ className, children }: CodeProps) {
   )
 }
 
-// Mermaid fence: emit <pre class="mermaid"> (raw text); SVG is injected by the
-// post-render effect in MarkdownView (see ProjFlow MarkdownRenderer.vue).
-function MermaidBlock({ children }: CodeProps) {
-  return <pre className="mermaid">{String(children ?? '').replace(/\n$/, '')}</pre>
-}
-
 function InlineCode({ className, children, ...rest }: CodeProps) {
   const text = String(children ?? '')
-  if ((className ?? '').includes('language-mermaid')) {
-    return <MermaidBlock>{children}</MermaidBlock>
-  }
   if ((className ?? '').includes('language-') || text.includes('\n')) {
     return <CodeBlock className={className}>{children}</CodeBlock>
   }
@@ -224,69 +220,50 @@ type MarkdownViewProps = {
   className?: string
   /** Intern slug for building intern-scoped links (project/task deep links) */
   internSlug?: string
+  /** Remove a leading `# heading` so it doesn't duplicate the page header */
+  stripLeadingH1?: boolean
 }
 
 // Module-level variable to pass internSlug to MarkdownLink without prop drilling
 // through react-markdown's component system.
 let currentInternSlug: string | undefined
 
-export function MarkdownView({ body, className, internSlug }: MarkdownViewProps) {
+// react-markdown defaultUrlTransform 会清空非白名单协议的自定义 URL，
+// internwiki: 是 wiki 内链的中间协议（渲染前由 MarkdownLink 转成路由），需放行
+const urlTransform = (value: string) => {
+  if (value.startsWith('internwiki:')) return value
+  return defaultUrlTransform(value)
+}
+
+function normalizeMathDelimiters(body: string) {
+  const parts = body.split(/(```[\s\S]*?```|`[^`]+`)/g)
+  return parts
+    .map((part, index) => {
+      if (index % 2 === 1) return part
+      return part
+        .replace(/\\\[([\s\S]*?)\\\]/g, (_, formula: string) => `$$\n${formula.trim()}\n$$`)
+        .replace(/\\\(([\s\S]*?)\\\)/g, (_, formula: string) => `$${formula}$`)
+        .replace(/(^|[^$])\$\$([^\n]+?)\$\$(?=$|[^$])/gm, (_, prefix: string, formula: string) => `${prefix}\n$$\n${formula.trim()}\n$$\n`)
+    })
+    .join('')
+}
+
+export function MarkdownView({ body, className, internSlug, stripLeadingH1 }: MarkdownViewProps) {
   currentInternSlug = internSlug
-  const containerRef = useRef<HTMLDivElement>(null)
-  const isDark = useDarkMode()
-  const processedBody = useMemo(
-    () => preprocessHabitTags(preprocessWikiLinks(body)),
-    [body],
-  )
-
-  // Post-render mermaid processing (mirrors ~/ProjFlow MarkdownRenderer.vue):
-  // re-run whenever content or theme changes; keep original source in
-  // dataset.source so re-theming starts from text, not processed SVG.
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-    const nodes = Array.from(container.querySelectorAll<HTMLPreElement>('pre.mermaid'))
-    if (nodes.length === 0) return
-
-    let cancelled = false
-    void (async () => {
-      try {
-        const mermaid = (await import('mermaid')).default
-        if (cancelled) return
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: isDark ? 'dark' : 'default',
-          securityLevel: 'loose',
-          fontFamily: 'system-ui, sans-serif',
-        })
-        for (const node of nodes) {
-          if (!node.dataset.source) {
-            node.dataset.source = node.textContent ?? ''
-          } else {
-            node.textContent = node.dataset.source
-            node.removeAttribute('data-processed')
-          }
-          node.querySelector('svg')?.remove()
-        }
-        await mermaid.run({ nodes, suppressErrors: true })
-      } catch (e) {
-        console.warn('Mermaid render error:', e)
-      }
-    })()
-    return () => {
-      cancelled = true
+  const processedBody = useMemo(() => {
+    let src = body
+    if (stripLeadingH1) {
+      src = src.replace(/^#\s+.+\n*/, '')
     }
-  }, [processedBody, isDark])
-
+    return preprocessHabitTags(preprocessWikiLinks(normalizeMathDelimiters(src)))
+  }, [body, stripLeadingH1])
   return (
-    <div
-      ref={containerRef}
-      className={cn('md-body text-[0.92rem] leading-relaxed text-body', className)}
-    >
+    <div className={cn('md-body text-[0.92rem] leading-relaxed text-body', className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeRaw, rehypeKatex]}
+        rehypePlugins={[rehypeRaw, [rehypeKatex, { trust: false, throwOnError: false }]]}
         components={components}
+        urlTransform={urlTransform}
       >
         {processedBody}
       </ReactMarkdown>

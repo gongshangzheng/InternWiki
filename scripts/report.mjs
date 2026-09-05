@@ -5,10 +5,10 @@
  *
  * Usage:
  *   pnpm report new-intern  --name 张三 --slug zhangsan [--team 后端组] [--role 实习生] [--start-date 2026-07-01]
- *   pnpm report new-daily   --intern alice [--date 2026-07-07]
- *   pnpm report new-weekly  --intern alice [--week 2026-W28]
- *   pnpm report new-monthly --intern alice [--month 2026-07]
- *   pnpm report new-doc     --intern alice --title "Redis 指南" [--slug redis-guide]
+ *   pnpm report new-daily   --intern tangwen [--date 2026-07-07]
+ *   pnpm report new-weekly  --intern tangwen [--week 2026-W28]
+ *   pnpm report new-monthly --intern tangwen [--month 2026-07]
+ *   pnpm report new-doc     --intern tangwen --title "Redis 指南" [--slug redis-guide]
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
@@ -113,9 +113,9 @@ function cmdNewReport(args, type) {
 
   if (!intern) {
     console.error('✗ --intern is required')
-    console.error('  pnpm report new-daily   --intern alice [--date 2026-07-07]')
-    console.error('  pnpm report new-weekly  --intern alice [--week 2026-W28]')
-    console.error('  pnpm report new-monthly --intern alice [--month 2026-07]')
+    console.error('  pnpm report new-daily   --intern tangwen [--date 2026-07-07]')
+    console.error('  pnpm report new-weekly  --intern tangwen [--week 2026-W28]')
+    console.error('  pnpm report new-monthly --intern tangwen [--month 2026-07]')
     process.exit(1)
   }
 
@@ -253,7 +253,7 @@ function cmdNewDoc(args) {
 
   if (!intern || !title) {
     console.error('✗ --intern and --title are required')
-    console.error('  pnpm report new-doc --intern alice --title "Redis 缓存指南" [--slug redis-guide]')
+    console.error('  pnpm report new-doc --intern tangwen --title "Redis 缓存指南" [--slug redis-guide]')
     process.exit(1)
   }
 
@@ -308,8 +308,8 @@ Commands:
 
 Examples:
   pnpm report new-intern   --name 张三 --slug zhangsan --team 后端组
-  pnpm report new-daily    --intern alice
-  pnpm report new-doc      --intern alice --title "Redis 缓存指南"
+  pnpm report new-daily    --intern tangwen
+  pnpm report new-doc      --intern tangwen --title "Redis 缓存指南"
 `
 
 const { args, positional } = parseArgs(process.argv)

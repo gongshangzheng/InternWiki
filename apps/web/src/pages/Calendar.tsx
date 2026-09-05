@@ -663,7 +663,7 @@ export function CalendarPage() {
               )}
               {selected.data.startDate && dailySlugs.has(selected.data.startDate) && (
                 <Link
-                  to={`/interns/${selectedIntern}/daily/${selected.data.startDate}`}
+                  to={`/interns/${selectedIntern}/report/daily/${selected.data.startDate}`}
                   className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary-subtle px-3 py-1.5 text-xs font-medium text-primary-subtle-foreground transition-colors hover:bg-primary/20"
                 >
                   <FileText className="h-3.5 w-3.5" />

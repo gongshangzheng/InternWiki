@@ -28,8 +28,8 @@ pnpm report new-intern --name 张三 --slug zhangsan --team 后端组 --role 后
 文件路径：`content/interns/{intern}/daily/YYYY-MM-DD.md`
 
 ```bash
-pnpm report new-daily --intern alice
-pnpm report new-daily --intern alice --date 2026-07-07
+pnpm report new-daily --intern tangwen
+pnpm report new-daily --intern tangwen --date 2026-07-07
 ```
 
 ```markdown
@@ -72,8 +72,8 @@ tags: [后端, API]
 文件路径：`content/interns/{intern}/weekly/YYYY-Wxx.md`（ISO 周编号）
 
 ```bash
-pnpm report new-weekly --intern alice
-pnpm report new-weekly --intern alice --week 2026-W28
+pnpm report new-weekly --intern tangwen
+pnpm report new-weekly --intern tangwen --week 2026-W28
 ```
 
 ```markdown
@@ -117,8 +117,8 @@ tags: [周报]
 文件路径：`content/interns/{intern}/monthly/YYYY-MM.md`
 
 ```bash
-pnpm report new-monthly --intern alice
-pnpm report new-monthly --intern alice --month 2026-07
+pnpm report new-monthly --intern tangwen
+pnpm report new-monthly --intern tangwen --month 2026-07
 ```
 
 ```markdown
@@ -160,8 +160,8 @@ tags: [月报]
 文件路径：`content/interns/{intern}/docs/{slug}.md`
 
 ```bash
-pnpm report new-doc --intern alice --title "Redis 缓存指南"
-pnpm report new-doc --intern alice --title "JWT 认证" --slug jwt-auth
+pnpm report new-doc --intern tangwen --title "Redis 缓存指南"
+pnpm report new-doc --intern tangwen --title "JWT 认证" --slug jwt-auth
 ```
 
 ```markdown

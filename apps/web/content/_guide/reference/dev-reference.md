@@ -27,15 +27,15 @@ pnpm setting help     # 查看 setting CLI 帮助
 
 | 变量 | 说明 | 示例 |
 |------|------|------|
-| `VITE_DEFAULT_INTERN` | 默认实习生 slug，日历等页面未指定 `?intern=` 时自动选中 | `alice` |
+| `VITE_DEFAULT_INTERN` | 默认实习生 slug，日历等页面未指定 `?intern=` 时自动选中 | `tangwen` |
 
 设置默认实习生最简单的方式是使用 CLI 命令：
 
 ```bash
-pnpm setting set-default --intern alice
+pnpm setting set-default --intern tangwen
 ```
 
-这会自动写入 `VITE_DEFAULT_INTERN=alice` 到 `.env` 文件。修改后重启 dev server 生效。
+这会自动写入 `VITE_DEFAULT_INTERN=tangwen` 到 `.env` 文件。修改后重启 dev server 生效。
 
 ---
 

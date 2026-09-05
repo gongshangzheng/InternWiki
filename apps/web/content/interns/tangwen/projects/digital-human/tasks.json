@@ -164,7 +164,7 @@
       "status": "active",
       "startDate": "2026-07-01",
       "endDate": null,
-      "description": "数字人后端 Agent 的设计理念调研",
+      "description": "调研主流数字人产品的效果与实现原理，覆盖技术路线分类（2D整图生成/换唇/3D数字人模型）、主观效果、实时通话支持、延迟等维度，为选型方案提供对标依据",
       "children": [
         {
           "id": "t2-1",
@@ -177,11 +177,20 @@
         },
         {
           "id": "t2-2",
-          "title": "产品形态与技术方案梳理",
+          "title": "主流数字人产品实现原理调研",
           "status": "active",
-          "startDate": null,
+          "startDate": "2026-07-13",
           "endDate": null,
-          "description": "梳理主流数字人产品形态与技术方案",
+          "description": "调研主流数字人产品（如 HeyGen、D-ID、Synthesia、硅基智能、腾讯智影、阿里通义等）的实现原理与技术路线分类：2D整图生成 vs 换唇驱动 vs 3D数字人模型，梳理各产品采用的方案类型",
+          "children": []
+        },
+        {
+          "id": "t2-3",
+          "title": "竞品效果与实时通话能力评估",
+          "status": "planned",
+          "startDate": "2026-07-13",
+          "endDate": null,
+          "description": "评估各竞品的实际效果（主观画质/唇同步/表情自然度）、是否支持实时通话、端到端延迟水平，输出竞品效果对比表",
           "children": []
         }
       ]
@@ -246,14 +255,54 @@
         {
           "id": "t3-6",
           "title": "跑通评测代码全流程",
-          "status": "active",
+          "status": "completed",
           "startDate": "2026-07-07",
-          "endDate": null,
+          "endDate": "2026-07-09",
           "startTime": "14:00",
           "endTime": "17:30",
           "location": "工位",
           "category": "work",
           "description": "端到端跑通评测代码的完整流程，验证各环节可用",
+          "children": []
+        },
+        {
+          "id": "t3-7",
+          "title": "新增 speed run 线路",
+          "status": "completed",
+          "assignee": "tangwen",
+          "startDate": "2026-07-09",
+          "endDate": "2026-07-09",
+          "description": "在评测框架中增加快速运行模式，端到端跑通项目并获取输出结果，用于主观效果检验，加速迭代调试",
+          "children": []
+        },
+        {
+          "id": "t3-8",
+          "title": "封装评测 skill",
+          "status": "completed",
+          "assignee": "tangwen",
+          "startDate": "2026-07-09",
+          "endDate": "2026-07-09",
+          "description": "将评测框架部分功能封装为 agent skill，使 agents 能够快速调用评测模型",
+          "children": []
+        },
+        {
+          "id": "t3-9",
+          "title": "模型参数重新下载",
+          "status": "completed",
+          "assignee": "tangwen",
+          "startDate": "2026-07-09",
+          "endDate": "2026-07-09",
+          "description": "之前下载的模型参数被误覆盖，已重新下载完成，恢复正常使用",
+          "children": []
+        },
+        {
+          "id": "t3-10",
+          "title": "UV 环境管理机制",
+          "status": "completed",
+          "assignee": "tangwen",
+          "startDate": "2026-07-09",
+          "endDate": "2026-07-09",
+          "description": "基于 UV 实现基准环境 + 微调环境双层策略：基准环境(.venv)覆盖大多数模型，依赖冲突的模型创建增量微调环境(.envs/{model})。包含 env-manager skill、manage_env.sh 脚本、四步决策流程（基准测试→调整基准→git回退→创建微调）、模型依赖冲突分析",
           "children": []
         }
       ]
@@ -309,6 +358,36 @@
           "category": "work",
           "description": "对候选项目进行适配封装，补充到现有评测框架中",
           "children": []
+        },
+        {
+          "id": "t-1650",
+          "title": "部署候选方案硬件评估",
+          "status": "completed",
+          "assignee": "tangwen",
+          "startDate": null,
+          "endDate": null,
+          "description": "基于论文精读评估各模型在 A10 上的可行性：LiveAct 需2×H100不可行；LivePortrait/Ditto 有可能（需实测显存）；FlashHead Pro 已验证近实时",
+          "children": []
+        },
+        {
+          "id": "t-1651",
+          "title": "FlexAvatar 适配器接入评测框架",
+          "status": "completed",
+          "assignee": "tangwen",
+          "startDate": "2026-07-09",
+          "endDate": "2026-07-09",
+          "description": "创建 FlexAvatar 模型适配器（adapter.py + worker.py + flexavatar.yaml），支持 pixel3dmm 和 artalk 两种驱动模式，实现七阶段生命周期接口",
+          "children": []
+        },
+        {
+          "id": "t-1652",
+          "title": "3DGS 头部 Avatar 方法调研",
+          "status": "completed",
+          "assignee": "tangwen",
+          "startDate": "2026-07-09",
+          "endDate": "2026-07-09",
+          "description": "调研 FlexAvatar / HyperGaussians / MATCH / AniGS 四个 3DGS 方法，评估接入价值与 A10 可行性，产出对比报告",
+          "children": []
         }
       ]
     },
@@ -336,6 +415,34 @@
           "startDate": null,
           "endDate": null,
           "description": "",
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "t6",
+      "title": "数字人选型方案确认",
+      "status": "planned",
+      "startDate": "2026-07-13",
+      "endDate": null,
+      "description": "基于产品调研结果确认数字人最终选型方案。方案在主观表现和客观指标上不低于竞品，至少不能有明显差距",
+      "children": [
+        {
+          "id": "t6-1",
+          "title": "自研方案与竞品效果对标",
+          "status": "planned",
+          "startDate": null,
+          "endDate": null,
+          "description": "将自研模型（FlashHead/FlexAvatar等）与竞品在主观效果（画质/唇同步/表情自然度）和客观指标（PSNR/SSIM/LPIPS/SyncNet等）上进行对标分析",
+          "children": []
+        },
+        {
+          "id": "t6-2",
+          "title": "选型决策报告",
+          "status": "planned",
+          "startDate": null,
+          "endDate": null,
+          "description": "综合调研结果和对标数据，输出选型决策报告，包含方案对比矩阵、推荐结论、A10部署可行性和风险分析",
           "children": []
         }
       ]

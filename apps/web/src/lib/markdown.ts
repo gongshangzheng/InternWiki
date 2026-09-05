@@ -7,6 +7,16 @@ import {
 
 type CollectionKey = 'daily' | 'weekly' | 'monthly' | 'docs'
 
+/** Report types that live under the /report/ path segment */
+const REPORT_ROUTES: CollectionKey[] = ['daily', 'weekly', 'monthly']
+
+/** Build the URL path for a collection route, adding report/ prefix for report types */
+function routePath(route: CollectionKey, slug: string, internSlug?: string): string {
+  const prefix = REPORT_ROUTES.includes(route) ? 'report/' : ''
+  const base = internSlug ? `/interns/${internSlug}/` : '/'
+  return `${base}${prefix}${route}/${slug}`
+}
+
 const ALL_COLLECTIONS: ReadonlyArray<{
   route: CollectionKey
   items: ReadonlyArray<{ slug: string }>
@@ -26,11 +36,20 @@ const ALL_COLLECTIONS: ReadonlyArray<{
     : [],
 }))
 
-function findRouteForSlug(slug: string): CollectionKey | null {
+/** 按精确 slug、完整路径或文件名后缀匹配，返回命中的完整 slug 与所属 route */
+function resolveSlug(
+  slug: string,
+): { route: CollectionKey; fullSlug: string } | null {
   for (const { route, items } of ALL_COLLECTIONS) {
-    if (items.some((it) => it.slug === slug)) {
-      return route
-    }
+    // 精确匹配 / 子目录完整路径匹配 / 仅文件名后缀匹配
+    // （docs 子目录化后 slug 含目录前缀，文档里可能写全路径也可能只写文件名）
+    const hit = items.find(
+      (it) =>
+        it.slug === slug ||
+        it.slug?.endsWith(`/${slug}`) ||
+        slug.endsWith(`/${it.slug}`),
+    )
+    if (hit) return { route, fullSlug: hit.slug }
   }
   return null
 }
@@ -39,7 +58,7 @@ function findRouteForSlug(slug: string): CollectionKey | null {
  * Rewrite an internal markdown link to a real SPA route.
  *
  * Handles patterns like:
- *   "daily/2026-07-07.md"  -> "/interns/{intern}/daily/2026-07-07"
+ *   "daily/2026-07-07.md"  -> "/interns/{intern}/report/daily/2026-07-07"
  *   "2026-07-07"            -> looks up the slug across collections
  *   "internwiki:project:slug" -> "/interns/{intern}/projects#slug"
  *   "internwiki:task:project/task-id" -> "/interns/{intern}/projects#project?task=task-id"
@@ -49,9 +68,17 @@ function findRouteForSlug(slug: string): CollectionKey | null {
 export function internalLinkHref(href: string, internSlug?: string): string | null {
   if (!href) return null
 
+  // react-markdown 传入的 href 可能被 URL 编码（中文文件名），先解码
+  let target = href
+  try {
+    target = decodeURIComponent(href)
+  } catch {
+    // 非法编码序列，保持原样
+  }
+
   // internwiki: protocol for project/task deep links
-  if (href.startsWith('internwiki:')) {
-    const rest = href.slice('internwiki:'.length)
+  if (target.startsWith('internwiki:')) {
+    const rest = target.slice('internwiki:'.length)
 
     // internwiki:project:{slug} -> /interns/{intern}/projects#{slug}
     if (rest.startsWith('project:')) {
@@ -77,27 +104,34 @@ export function internalLinkHref(href: string, internSlug?: string): string | nu
   }
 
   // absolute URLs are never internal
-  if (/^[a-z][a-z0-9+.-]*:/i.test(href)) return null
-  if (href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return null
+  if (/^[a-z][a-z0-9+.-]*:/i.test(target)) return null
+  if (target.startsWith('#') || target.startsWith('mailto:') || target.startsWith('tel:')) return null
 
   // strip the .md extension
-  const path = href.replace(/\.md$/i, '')
+  const path = target.replace(/\.md$/i, '')
   // collapse any leading ./ or ../ segments
   const cleaned = path.replace(/^(\.\.?\/)+/, '')
 
-  // case: "{collection}/{slug}" — e.g. "daily/2026-07-07"
+  // case: "{collection}/{slug}" — e.g. "daily/2026-07-07" or "docs/sub/file"
   const dirSlug = cleaned.match(/^([a-z]+)\/(.+)$/i)
   if (dirSlug) {
     const route = dirSlug[1] as CollectionKey
     if (['daily', 'weekly', 'monthly', 'docs'].includes(route)) {
-      return `/${route}/${dirSlug[2]}`
+      const sub = dirSlug[2]
+      // 子目录 slug（含 /）按完整路径解析，避免截断
+      if (sub.includes('/')) {
+        const resolved = resolveSlug(sub)
+        if (resolved) return routePath(resolved.route, resolved.fullSlug, internSlug)
+      } else {
+        return routePath(route, sub, internSlug)
+      }
     }
   }
 
   // case: bare slug — look it up across all collections
-  const route = findRouteForSlug(cleaned)
-  if (route) {
-    return `/${route}/${cleaned}`
+  const resolved = resolveSlug(cleaned)
+  if (resolved) {
+    return routePath(resolved.route, resolved.fullSlug, internSlug)
   }
 
   return null

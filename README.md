@@ -43,13 +43,13 @@ pnpm dev
 pnpm build
 
 # 新增实习生
-pnpm report new-intern --name 张三 --slug alice --team 后端组 --start-date 2026-06-01
+pnpm report new-intern --name 张三 --slug zhangsan --team 后端组 --start-date 2026-06-01
 
 # 新增日报
-pnpm report new-daily --intern alice
+pnpm report new-daily --intern tangwen
 
 # 新增月报
-pnpm report new-monthly --intern alice --month 2026-07
+pnpm report new-monthly --intern tangwen --month 2026-07
 ```
 
 打开 http://localhost:5180/InternWiki/ 查看站点。
@@ -165,7 +165,7 @@ AI 可以辅助润色措辞、整理排版、检查错别字，但文档的内�
 每个实习生的所有图片统一存放在 `content/interns/{name}/assets/` 目录下。
 
 ```
-content/interns/alice/assets/
+content/interns/tangwen/assets/
 ├── search-engine-architecture.png
 ├── redis-cache-flow.png
 └── api-error-screenshot.png
@@ -287,7 +287,7 @@ graph LR
 ```json
 {
   "project": "search-engine",
-  "intern": "alice",
+  "intern": "tangwen",
   "tasks": [
     {
       "id": "t1",

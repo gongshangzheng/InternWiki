@@ -108,8 +108,16 @@ export function getInternReports(internSlug: string) {
     daily: daily.filter((d) => d.intern === internSlug).sort(byDateDesc),
     weekly: weekly.filter((w) => w.intern === internSlug).sort(byDateDesc),
     monthly: monthly.filter((m) => m.intern === internSlug).sort(byDateDesc),
-    docs: docs.filter((d) => d.intern === internSlug).sort(byDateDesc),
+    docs: docs.filter((d) => d.intern === internSlug).sort(docsOrder),
   }
+}
+
+// docs 排序：frontmatter id 升序在前（教程/系列按阅读序），无 id 按日期降序在后
+const docsOrder = (a: Docs, b: Docs) => {
+  const ia = a.id ?? Number.POSITIVE_INFINITY
+  const ib = b.id ?? Number.POSITIVE_INFINITY
+  if (ia !== ib) return ia - ib
+  return byDateDesc(a, b)
 }
 
 // ── Projects ─────────────────────────────────────────────────

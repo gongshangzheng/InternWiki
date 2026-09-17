@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
 
 /* Custom dark variant: match `html.dark` so .dark utilities flip with our
    theme attribute (Tailwind v4 doesn't ship `.dark` by default). */
@@ -126,6 +127,37 @@ body {
 .md-body a { color: var(--color-primary); text-decoration: none; }
 .md-body a:hover { text-decoration: underline; }
 .md-body hr { border: none; border-top: 1px solid var(--color-border); margin: 1.5rem 0; }
+.md-body .katex { color: inherit; }
+.md-body .katex-display { margin: 1rem 0; overflow-x: auto; overflow-y: hidden; padding: 0.25rem 0; }
+
+/* ── Mermaid blocks ─────────────────────────────────────────── */
+/* Rendered SVG: centered, horizontally scrollable when wide */
+.md-body pre.mermaid {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  margin: 1rem 0;
+  padding: 0.75rem 0;
+  background: transparent;
+}
+.md-body pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+/* Degraded state (syntax error / mermaid failed to load): show source as code */
+.md-body pre.mermaid:not(:has(svg)) {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-card);
+  color: var(--color-body);
+}
 
 /* ── Guide wiki layout ───────────────────────────────────────── */
 

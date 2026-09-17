@@ -59,7 +59,9 @@ export function TaskTreeNode({
 }) {
   const [expanded, setExpanded] = useState(depth < 1)
   const [hovered, setHovered] = useState(false)
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const rowRef = useRef<HTMLDivElement>(null)
   const hasChildren = task.children.length > 0
   const statusCfg = TASK_STATUS_CONFIG[task.status] ?? TASK_STATUS_CONFIG.planned
   const { total, completed } = hasChildren ? countTasks(task.children) : { total: 0, completed: 0 }
@@ -67,7 +69,13 @@ export function TaskTreeNode({
   const isClickable = !!(task.notePath || task.description)
 
   const handleEnter = () => {
-    hoverTimer.current = setTimeout(() => setHovered(true), 400)
+    hoverTimer.current = setTimeout(() => {
+      if (rowRef.current) {
+        const rect = rowRef.current.getBoundingClientRect()
+        setTooltipPos({ x: rect.left + 32, y: rect.bottom + 4 })
+      }
+      setHovered(true)
+    }, 400)
   }
   const handleLeave = () => {
     if (hoverTimer.current) clearTimeout(hoverTimer.current)
@@ -76,7 +84,7 @@ export function TaskTreeNode({
 
   return (
     <div className="select-none">
-      <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      <div ref={rowRef} className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
         <div
           className={cn(
             'group flex items-center gap-0 rounded-sm transition-colors',
@@ -185,7 +193,10 @@ export function TaskTreeNode({
 
         {/* Hover tooltip */}
         {hovered && !isSelected && (
-          <div className="absolute left-8 top-full z-50 w-64 rounded-lg border border-border bg-card p-3 shadow-xl">
+          <div
+            className="fixed z-50 w-80 rounded-lg border border-border bg-card p-3 shadow-xl"
+            style={{ left: tooltipPos?.x, top: tooltipPos?.y }}
+          >
             <div className="flex items-center gap-2">
               <span className={cn('h-2.5 w-2.5 rounded-full ring-2', statusCfg.dot, statusCfg.ring)} />
               <h3 className="text-sm font-semibold text-heading">{task.title}</h3>

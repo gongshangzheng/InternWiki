@@ -52,7 +52,7 @@ export function RelatedReports({ type, intern, date }: RelatedReportsProps) {
   const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
   const weekKey = getIsoWeekKey(d)
 
-  const base = `/interns/${intern}`
+  const base = `/interns/${intern}/report`
 
   if (type === 'daily') {
     // Previous / next daily

@@ -5,10 +5,29 @@ description: InternWiki 项目管理与任务树指南。创建项目、管理�
 
 # InternWiki 项目管理与任务树
 
+## 配套脚本
+
+`scripts/` 下的两个文件均为符号链接，指向仓库根目录的实际 CLI：
+
+| 脚本 | 等同于 | 功能 |
+|------|--------|------|
+| `scripts/task.mjs` → `../../../../scripts/task.mjs` | `pnpm task` | 任务树 CRUD |
+| `scripts/project.mjs` → `../../../../scripts/project.mjs` | `pnpm project` | 项目创建 |
+
+```bash
+# 直接调用（在仓库根目录）
+node .agents/skills/internwiki-projects/scripts/task.mjs --help
+node .agents/skills/internwiki-projects/scripts/project.mjs --help
+
+# 或通过 pnpm（推荐）
+pnpm task --help
+pnpm project --help
+```
+
 ## 创建项目
 
 ```bash
-pnpm project new --intern alice --slug search-engine --title "搜索引擎" --summary "基于 ES 的全文搜索" --category work
+pnpm project new --intern tangwen --slug search-engine --title "搜索引擎" --summary "基于 ES 的全文搜索" --category work
 ```
 
 自动创建 `content/interns/{intern}/projects/{slug}/`：
@@ -66,22 +85,22 @@ planned → active → completed
 
 ```bash
 # 添加任务
-pnpm task add --intern alice --project search-engine --title "write tests" --parent t2 --status planned --tags test,quality
+pnpm task add --intern tangwen --project search-engine --title "write tests" --parent t2 --status planned --tags test,quality
 
 # 标记完成
-pnpm task done --intern alice --project search-engine --id t2-2
+pnpm task done --intern tangwen --project search-engine --id t2-2
 
 # 列出任务树
-pnpm task list --intern alice --project search-engine
+pnpm task list --intern tangwen --project search-engine
 
 # 查看统计（聚合所有项目）
-pnpm task stats --intern alice
+pnpm task stats --intern tangwen
 
 # 删除任务
-pnpm task remove --intern alice --project search-engine --id t2-3
+pnpm task remove --intern tangwen --project search-engine --id t2-3
 
 # 移动任务到新父节点
-pnpm task move --intern alice --project search-engine --id t2-2 --parent t3
+pnpm task move --intern tangwen --project search-engine --id t2-2 --parent t3
 ```
 
 ### task add 参数
@@ -104,13 +123,13 @@ pnpm task move --intern alice --project search-engine --id t2-2 --parent t3
 ```json
 {
   "project": "search-engine",
-  "intern": "alice",
+  "intern": "tangwen",
   "tasks": [
     {
       "id": "t1",
       "title": "需求分析",
       "status": "completed",
-      "assignee": "alice",
+      "assignee": "tangwen",
       "startDate": "2026-07-07",
       "endDate": "2026-07-07",
       "description": "需求调研与架构设计",

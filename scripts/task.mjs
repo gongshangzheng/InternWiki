@@ -4,12 +4,12 @@
  * InternWiki Task CLI — 任务树管理
  *
  * Usage:
- *   pnpm task add    --intern alice --project search-engine --title "添加测试" [--parent t2] [--status planned]
- *   pnpm task done   --intern alice --project search-engine --id t2-2
- *   pnpm task list   --intern alice --project search-engine
- *   pnpm task stats  --intern alice
- *   pnpm task remove --intern alice --project search-engine --id t2-3
- *   pnpm task move   --intern alice --project search-engine --id t2-2 --parent t3
+ *   pnpm task add    --intern tangwen --project search-engine --title "添加测试" [--parent t2] [--status planned]
+ *   pnpm task done   --intern tangwen --project search-engine --id t2-2
+ *   pnpm task list   --intern tangwen --project search-engine
+ *   pnpm task stats  --intern tangwen
+ *   pnpm task remove --intern tangwen --project search-engine --id t2-3
+ *   pnpm task move   --intern tangwen --project search-engine --id t2-2 --parent t3
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs'
@@ -369,10 +369,10 @@ Commands:
   pnpm task stats  --intern <name>
 
 Examples:
-  pnpm task add  --intern alice --project search-engine --title "添加测试" --parent t2
-  pnpm task done --intern alice --project search-engine --id t2-2
-  pnpm task list --intern alice --project search-engine
-  pnpm task stats --intern alice
+  pnpm task add  --intern tangwen --project search-engine --title "添加测试" --parent t2
+  pnpm task done --intern tangwen --project search-engine --id t2-2
+  pnpm task list --intern tangwen --project search-engine
+  pnpm task stats --intern tangwen
 `
 
 const { args, positional } = parseArgs(process.argv)

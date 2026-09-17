@@ -341,7 +341,7 @@ graph LR
 ```yaml
 ---
 name: 张三
-slug: alice
+slug: zhangsan
 team: 后端组
 role: 后端开发实习生
 startDate: 2026-06-01
@@ -399,14 +399,14 @@ export async function getProjectTasks(internSlug: string, projectSlug: string): 
 ```json
 {
   "project": "search-engine",
-  "intern": "alice",
+  "intern": "tangwen",
   "tasks": [
-    { "id": "t1", "title": "设计索引 Schema", "status": "completed", "assignee": "alice", "startDate": "2026-06-01", "endDate": "2026-06-05", "description": "", "notePath": "notes/schema-design.md", "tags": ["后端"], "children": [] },
+    { "id": "t1", "title": "设计索引 Schema", "status": "completed", "assignee": "tangwen", "startDate": "2026-06-01", "endDate": "2026-06-05", "description": "", "notePath": "notes/schema-design.md", "tags": ["后端"], "children": [] },
     {
       "id": "t2",
       "title": "实现爬虫",
       "status": "active",
-      "assignee": "alice",
+      "assignee": "tangwen",
       "startDate": "2026-06-06",
       "endDate": null,
       "description": "URL 队列 + HTML 解析",
@@ -491,10 +491,10 @@ export async function getProjectTasks(internSlug: string, projectSlug: string): 
 
 ```bash
 # 任务增删改查（直接读写 tasks.json）
-pnpm task add    --intern alice --project search-engine --title "添加测试" --parent t2
-pnpm task done   --intern alice --project search-engine --id t2-2
-pnpm task list   --intern alice --project search-engine
-pnpm task stats  --intern alice          # 聚合所有项目统计
+pnpm task add    --intern tangwen --project search-engine --title "添加测试" --parent t2
+pnpm task done   --intern tangwen --project search-engine --id t2-2
+pnpm task list   --intern tangwen --project search-engine
+pnpm task stats  --intern tangwen          # 聚合所有项目统计
 ```
 
 ---
@@ -508,7 +508,7 @@ pnpm task stats  --intern alice          # 聚合所有项目统计
 ```
 /                                  首页（实习生目录 + 全站概览）
 /calendar                          日历页（含实习生选择器）
-/calendar?intern=alice             指定实习生日程
+/calendar?intern=tangwen             指定实习生日程
 /interns/:name                     实习生仪表盘
 /interns/:name/daily               日报列表
 /interns/:name/daily/:slug         日报详情
@@ -642,14 +642,14 @@ pnpm dev                          # Vite 开发服务器（默认 :5180，HMR）
 pnpm build                        # velite build + vite build
 
 # 实习生与报告管理 (scripts/report.mjs)
-pnpm report new-intern   --name 张三 --slug alice --team 后端组 --start-date 2026-06-01
-pnpm report new-daily    --intern alice [--date 2026-07-07]
-pnpm report new-weekly   --intern alice [--week 2026-W28]
-pnpm report new-monthly  --intern alice [--month 2026-07]
-pnpm report new-doc      --intern alice --title "Redis 缓存指南"
+pnpm report new-intern   --name 张三 --slug zhangsan --team 后端组 --start-date 2026-06-01
+pnpm report new-daily    --intern tangwen [--date 2026-07-07]
+pnpm report new-weekly   --intern tangwen [--week 2026-W28]
+pnpm report new-monthly  --intern tangwen [--month 2026-07]
+pnpm report new-doc      --intern tangwen --title "Redis 缓存指南"
 
 # 项目创建 (scripts/project.mjs)
-pnpm project new --intern alice --slug search-engine --title "搜索引擎"
+pnpm project new --intern tangwen --slug search-engine --title "搜索引擎"
 
 # 任务管理 (scripts/task.mjs，见 3.4)
 ```

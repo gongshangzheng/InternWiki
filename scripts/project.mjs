@@ -4,7 +4,7 @@
  * InternWiki Project CLI — 项目创建
  *
  * Usage:
- *   pnpm project new --intern alice --slug search-engine --title "搜索引擎" [--summary "..."] [--category work]
+ *   pnpm project new --intern tangwen --slug search-engine --title "搜索引擎" [--summary "..."] [--category work]
  */
 
 import { writeFileSync, existsSync, mkdirSync } from 'node:fs'
@@ -50,7 +50,7 @@ function cmdNewProject(args) {
 
   if (!intern || !slug || !title) {
     console.error('✗ --intern, --slug, and --title are required')
-    console.error('  pnpm project new --intern alice --slug search-engine --title "搜索引擎" --summary "..."')
+    console.error('  pnpm project new --intern tangwen --slug search-engine --title "搜索引擎" --summary "..."')
     process.exit(1)
   }
 
@@ -114,7 +114,7 @@ Commands:
   pnpm project new --intern <slug> --slug <project-slug> --title "项目名" [--summary "..."] [--category work] [--start-date YYYY-MM-DD]
 
 Examples:
-  pnpm project new --intern alice --slug search-engine --title "搜索引擎" --summary "基于 ES 的全文搜索"
+  pnpm project new --intern tangwen --slug search-engine --title "搜索引擎" --summary "基于 ES 的全文搜索"
 `
 
 const { args, positional } = parseArgs(process.argv)

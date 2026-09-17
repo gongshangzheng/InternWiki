@@ -2,6 +2,8 @@ packages:
   - "apps/*"
   - "scripts/*"
 
+verifyDepsBeforeRun: false
+
 allowBuilds:
   esbuild: false
   sharp: false
@@ -10,3 +12,4 @@ onlyBuiltDependencies:
   - esbuild
   - "@tailwindcss/oxide"
   - sharp
+  - better-sqlite3

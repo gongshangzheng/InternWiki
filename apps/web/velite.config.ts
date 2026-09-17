@@ -9,6 +9,7 @@ const reportSchema = s
     date: s.string().optional(),
     summary: s.string().optional(),
     tags: s.array(s.string()).default([]),
+    id: s.number().optional(),
     metadata: s.record(s.string(), s.unknown()).default({}),
     body: s.raw(),
   })
@@ -18,10 +19,17 @@ const reportSchema = s
     // intern = 目录中 "interns" 后面的一段
     const internsIdx = parts.indexOf('interns')
     const intern = internsIdx >= 0 ? (parts[internsIdx + 1] ?? '') : ''
+    // docs 子目录路径化 slug（interns/{intern}/docs/ 之后的段），防止子目录同名撞车
+    const docsIdx = parts.indexOf('docs')
+    const inDocsDir = internsIdx >= 0 && docsIdx === internsIdx + 2
+    const pathSlug =
+      inDocsDir && docsIdx < parts.length - 1
+        ? `${parts.slice(docsIdx + 1).join('/')}/${filename}`
+        : filename
     return {
       ...data,
       title: data.title ?? filename,
-      slug: data.slug ?? filename,
+      slug: data.slug ?? pathSlug,
       intern,
     }
   })

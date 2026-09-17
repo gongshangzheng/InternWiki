@@ -42,10 +42,10 @@ InternWiki/
 | 任务 | Skill | 关键命令 |
 |------|-------|----------|
 | 创建实习生档案 | `internwiki-reports` | `pnpm report new-intern --name 张三 --slug zhangsan` |
-| 写日报/周报/月报 | `internwiki-reports` | `pnpm report new-daily --intern alice` |
-| 写技术文档 | `internwiki-reports` | `pnpm report new-doc --intern alice --title "Redis 指南"` |
+| 写日报/周报/月报 | `internwiki-reports` | `pnpm report new-daily --intern tangwen` |
+| 写技术文档 | `internwiki-reports` | `pnpm report new-doc --intern tangwen --title "Redis 指南"` |
 | 在报告中链接项目/任务 | `internwiki-reports` | `[[project:slug]]` / `[[task:slug/id]]` |
-| 创建项目 | `internwiki-projects` | `pnpm project new --intern alice --slug xxx` |
+| 创建项目 | `internwiki-projects` | `pnpm project new --intern tangwen --slug xxx` |
 | 管理任务树 | `internwiki-projects` | `pnpm task add/list/done/move/remove` |
 | 放置图片/截图 | `internwiki-devops` | 放 `public/interns/{slug}/` 下 |
 | Git 分支操作 | `internwiki-devops` | `git checkout -b intern-xxx` |
@@ -55,21 +55,21 @@ InternWiki/
 ```bash
 # ── 报告与档案 (pnpm report) ──
 pnpm report new-intern   --name 张三 --slug zhangsan --team 后端组
-pnpm report new-daily    --intern alice [--date 2026-07-07]
-pnpm report new-weekly   --intern alice [--week 2026-W28]
-pnpm report new-monthly  --intern alice [--month 2026-07]
-pnpm report new-doc      --intern alice --title "JWT 认证" [--slug jwt-auth]
+pnpm report new-daily    --intern tangwen [--date 2026-07-07]
+pnpm report new-weekly   --intern tangwen [--week 2026-W28]
+pnpm report new-monthly  --intern tangwen [--month 2026-07]
+pnpm report new-doc      --intern tangwen --title "JWT 认证" [--slug jwt-auth]
 
 # ── 项目创建 (pnpm project) ──
-pnpm project new --intern alice --slug search-engine --title "搜索引擎"
+pnpm project new --intern tangwen --slug search-engine --title "搜索引擎"
 
 # ── 任务管理 (pnpm task) ──
-pnpm task add    --intern alice --project xxx --title "任务名" [--parent t1] [--status planned]
-pnpm task done   --intern alice --project xxx --id t1-2
-pnpm task list   --intern alice --project xxx
-pnpm task stats  --intern alice
-pnpm task remove --intern alice --project xxx --id t1-3
-pnpm task move   --intern alice --project xxx --id t1-2 --parent t3
+pnpm task add    --intern tangwen --project xxx --title "任务名" [--parent t1] [--status planned]
+pnpm task done   --intern tangwen --project xxx --id t1-2
+pnpm task list   --intern tangwen --project xxx
+pnpm task stats  --intern tangwen
+pnpm task remove --intern tangwen --project xxx --id t1-3
+pnpm task move   --intern tangwen --project xxx --id t1-2 --parent t3
 
 # ── 开发 ──
 pnpm dev            # 开发服务器 (port 5180, base /InternWiki/)
@@ -86,7 +86,7 @@ pnpm typecheck      # 类型检查
 
 2. **内容编译**：修改 Markdown 内容后需运行 `pnpm content:build` 重新编译 Velite（或用 `pnpm dev` 热重载）。`tasks.json` 不经过 Velite，修改即时生效。
 
-3. **Base path**：所有 URL 需带 `/InternWiki/` 前缀。图片引用：`![图](/InternWiki/interns/alice/docs/diagram.png)`。
+3. **Base path**：所有 URL 需带 `/InternWiki/` 前缀。图片引用：`![图](/InternWiki/interns/tangwen/docs/diagram.png)`。
 
 4. **文件命名**：日报 `YYYY-MM-DD.md`，周报 `YYYY-Wxx.md`（ISO 周），月报 `YYYY-MM.md`。项目说明文件必须叫 `README.md`。
 

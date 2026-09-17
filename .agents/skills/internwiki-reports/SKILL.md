@@ -5,6 +5,18 @@ description: InternWiki 报告与文档撰写指南。创建实习生档案、�
 
 # InternWiki 报告与文档撰写
 
+## 配套脚本
+
+`scripts/report.mjs`（符号链接 → `../../../../scripts/report.mjs`）是报告 CLI 的实际入口，等同于 `pnpm report`。
+
+```bash
+# 直接调用（在仓库根目录）
+node .agents/skills/internwiki-reports/scripts/report.mjs --help
+
+# 或通过 pnpm（推荐）
+pnpm report --help
+```
+
 ## 快速创建
 
 ```bash
@@ -12,12 +24,12 @@ description: InternWiki 报告与文档撰写指南。创建实习生档案、�
 pnpm report new-intern --name 张三 --slug zhangsan --team 后端组 --role 后端开发实习生
 
 # 日报/周报/月报
-pnpm report new-daily   --intern alice [--date 2026-07-07]
-pnpm report new-weekly  --intern alice [--week 2026-W28]
-pnpm report new-monthly  --intern alice [--month 2026-07]
+pnpm report new-daily   --intern tangwen [--date 2026-07-07]
+pnpm report new-weekly  --intern tangwen [--week 2026-W28]
+pnpm report new-monthly  --intern tangwen [--month 2026-07]
 
 # 技术文档
-pnpm report new-doc --intern alice --title "JWT 认证" [--slug jwt-auth]
+pnpm report new-doc --intern tangwen --title "JWT 认证" [--slug jwt-auth]
 ```
 
 详细模板和规范见 [report-templates.md](report-templates.md)。
@@ -117,3 +129,17 @@ tags: [后端, API]
 - 周报 → 所属月报
 
 详情页底部自动显示关联报告链接，无需手动维护。
+
+## 文档增强特性
+
+- **子目录**：`content/interns/{slug}/docs/` 支持子目录组织，slug 自动带目录前缀（如 `docs/基础/xxx.md` → slug `基础/xxx`），侧边栏树形分组折叠
+- **id 排序**：frontmatter 可选 `id`（数字），有 id 的文档升序排在前（教程/系列按阅读序），无 id 按日期降序
+- **Mermaid**：` ```mermaid ` 代码块渲染为图表（暗色主题自适应、语法错误降级显示源码）
+- **正文 h1 剥离**：文档页正文首行 `# 标题` 自动去除（页头已渲染标题）
+- **面试追问预案**：面向面试的文档每篇末尾加 Q&A 板块（参照 junjiawang VoiceAgent 系列格式）
+
+## 参考文件
+
+- [references/writing-guide.md](references/writing-guide.md) — 文档写作规范（结构、风格、链接、mermaid 使用原则）
+- [references/report-templates.md](report-templates.md) — 报告模板
+- [references/mermaid-cheatsheet.md](references/mermaid-cheatsheet.md) — Mermaid 语法速查
